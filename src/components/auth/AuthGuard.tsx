@@ -1,8 +1,9 @@
 import { useState, useEffect, type ReactNode } from 'react'
 import { isSupabaseAvailable } from '@/services/supabase/client'
-import { getSession, onAuthChange } from '@/services/supabase/auth'
+import { getSession, onAuthChange, signOut } from '@/services/supabase/auth'
 import { migrateLocalToSupabase } from '@/services/dataMigration'
 import { AuthScreen } from './AuthScreen'
+import { AccountCtx, type AccountState } from './AccountContext'
 import type { Session } from '@supabase/supabase-js'
 import './auth.css'
 
@@ -29,6 +30,14 @@ export function AuthGuard({ children }: Props) {
   const handleShowAuth = () => {
     try { localStorage.removeItem(SKIP_KEY) } catch { /* ignore */ }
     setSkipped(false)
+  }
+
+  const account: AccountState = {
+    mode: 'none',
+    email: null,
+    showSignIn: handleShowAuth,
+    // After sign-out, show the choice screen again rather than silently going local
+    signOut: async () => { await signOut(); handleShowAuth() },
   }
 
   useEffect(() => {
@@ -111,28 +120,25 @@ export function AuthGuard({ children }: Props) {
 
   // No Supabase configured = local mode, render app directly
   if (!isSupabaseAvailable) {
-    return <>{children}</>
+    return <AccountCtx.Provider value={{ ...account, mode: 'none' }}>{children}</AccountCtx.Provider>
   }
 
   // Supabase configured, no session, user chose local mode:
-  // render the app (ServiceProvider falls back to local services)
-  // with a small pill to come back and sign in for sync.
+  // render the app (ServiceProvider falls back to local services);
+  // the header AccountButton offers "Sign in to sync".
   if (!session && skipped) {
-    return (
-      <>
-        {children}
-        <button className="auth-sync-pill" onClick={handleShowAuth}>
-          ☁️ Sign in to sync
-        </button>
-      </>
-    )
+    return <AccountCtx.Provider value={{ ...account, mode: 'local' }}>{children}</AccountCtx.Provider>
   }
 
-  // Supabase configured but no session = show auth (with skip)
+  // Supabase configured but no session = show the sign-in / local choice
   if (!session) {
     return <AuthScreen onSkip={handleSkip} />
   }
 
   // Authenticated — render app
-  return <>{children}</>
+  return (
+    <AccountCtx.Provider value={{ ...account, mode: 'cloud', email: session.user.email ?? null }}>
+      {children}
+    </AccountCtx.Provider>
+  )
 }

@@ -18,9 +18,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
-    userService.getCurrentUser().then(setUser).catch(e => {
+    // Clear the previous service's user first: keeping a stale local user id
+    // after sign-in made cloud writes fail row-level security.
+    setUser(null)
+    let cancelled = false
+    userService.getCurrentUser().then(u => { if (!cancelled) setUser(u) }).catch(e => {
       console.warn('[UserContext] Failed to load user:', e)
     })
+    return () => { cancelled = true }
   }, [userService])
 
   const updatePreferences = async (prefs: Partial<User['preferences']>) => {

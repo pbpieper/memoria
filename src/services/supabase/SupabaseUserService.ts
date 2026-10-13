@@ -36,10 +36,21 @@ export class SupabaseUserService implements IUserService {
       .from('profiles')
       .select('*')
       .eq('id', authUser.id)
-      .single()
+      .maybeSingle()
 
     if (error) throw error
-    return rowToUser(data as ProfileRow)
+    if (data) return rowToUser(data as ProfileRow)
+
+    // Accounts created before the signup trigger existed have no profile row;
+    // create it (RLS allows inserting your own) so FK-linked writes succeed.
+    const { data: created, error: insertError } = await supabase
+      .from('profiles')
+      .insert({ id: authUser.id, email: authUser.email ?? null })
+      .select('*')
+      .single()
+
+    if (insertError) throw insertError
+    return rowToUser(created as ProfileRow)
   }
 
   async createUser(name: string): Promise<User> {
