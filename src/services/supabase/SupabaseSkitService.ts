@@ -92,7 +92,8 @@ export class SupabaseSkitService implements ISkitService {
   async createSkit(
     input: Omit<Skit, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<Skit> {
-    const row = skitToRow(input)
+    // skits.id is TEXT with no DB default, so the client must supply one
+    const row = skitToRow({ ...input, id: crypto.randomUUID() })
 
     // Set created_by to current auth user if available
     try {

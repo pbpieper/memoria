@@ -35,6 +35,7 @@ import { Dashboard } from '@/components/tools/Dashboard'
 import { StudyGuide } from '@/components/tools/StudyGuide'
 import type { ToolId } from '@/types/tools'
 import type { Skit } from '@/types/skit'
+import { AccountButton } from '@/components/auth/AccountButton'
 
 function ToolContent({ toolId }: { toolId: ToolId }) {
   const { setActiveTool } = useApp()
@@ -123,6 +124,7 @@ export function AppShell() {
                   🔥 {streak.currentStreak}
                 </span>
               )}
+              <AccountButton />
               <button onClick={toggle}
                 className="px-3 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-xs cursor-pointer text-[var(--color-text-secondary)]">
                 {isDark ? '☀️' : '🌙'}

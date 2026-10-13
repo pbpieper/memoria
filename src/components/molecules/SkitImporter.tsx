@@ -48,7 +48,14 @@ export function SkitImporter({ open, onClose, onCreated }: Props) {
   const handleCreate = async () => {
     if (!preview) return
     const skitWithTags = { ...preview, tags }
-    await skitService.createSkit(skitWithTags)
+    try {
+      await skitService.createSkit(skitWithTags)
+    } catch (e) {
+      console.error('[SkitImporter] createSkit failed:', e)
+      const detail = e instanceof Error ? e.message : (e as { message?: string })?.message
+      toast.error(`Couldn't save "${preview.title}"${detail ? `: ${detail}` : ''}`, { duration: 6000 })
+      return
+    }
     toast.success(`Created "${preview.title}"`)
     setRaw('')
     setTitle('')
