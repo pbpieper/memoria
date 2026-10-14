@@ -1,4 +1,5 @@
 import type { Skit, Chunk, Line, MacroSection } from '@/types/skit'
+import { splitLongChunks } from '@/lib/text'
 
 interface ParseOptions {
   title?: string
@@ -54,6 +55,10 @@ export function parseSkitFromText(raw: string, options?: ParseOptions): Omit<Ski
     chunks.push({ id: 1, label: 'Part 1', lines: parsedLines })
   }
 
+  // A pasted song with no blank lines would be one huge section: split it
+  const split = splitLongChunks(chunks)
+  if (split.changed) chunks.splice(0, chunks.length, ...split.chunks)
+
   const speakers = options?.speakers ?? [...speakersSet]
 
   // Auto-generate macro sections
@@ -80,7 +85,7 @@ export function parseSkitFromText(raw: string, options?: ParseOptions): Omit<Ski
 
   return {
     title: options?.title ?? 'Untitled Skit',
-    subtitle: options?.subtitle ?? `${chunks.length} chunks, ${speakers.join(', ')}`,
+    subtitle: options?.subtitle ?? (speakers.length > 1 ? `${chunks.length} chunks, ${speakers.join(', ')}` : `${chunks.length} sections`),
     speakers,
     chunks,
     palaceImages: [],

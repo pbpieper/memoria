@@ -5,6 +5,9 @@ import { SectionSelect } from '@/components/molecules/SectionSelect'
 import { getLinesForSection } from '@/lib/helpers'
 import { colors } from '@/design/tokens'
 import clsx from 'clsx'
+import { normalizeWord, firstLetterOf } from '@/lib/text'
+
+const toWords = (s: string) => s.split(/\s+/).map(normalizeWord).filter(Boolean)
 
 const HINT_TYPES = [
   { id: 'firstletter', label: 'First Letter', icon: '🔤', desc: 'Shows first letter of each word' },
@@ -35,8 +38,8 @@ export function FreeWriteMode() {
 
   const score = useMemo(() => {
     if (!checked) return null
-    const targetWords = fullText.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean)
-    const userWords = userText.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean)
+    const targetWords = toWords(fullText)
+    const userWords = toWords(userText)
     const userSet = new Set(userWords)
     let hits = 0
     targetWords.forEach(w => { if (userSet.has(w)) hits++ })
@@ -52,8 +55,8 @@ export function FreeWriteMode() {
     if (!showDiff) return null
     return lines.map(line => {
       const targetWords = line.text.split(/\s+/)
-      const userLower = userText.toLowerCase().replace(/[^a-z0-9\s]/g, '')
-      return { speaker: line.speaker, words: targetWords.map(w => ({ word: w, found: userLower.includes(w.toLowerCase().replace(/[^a-z0-9]/g, '')) })) }
+      const userSet = new Set(toWords(userText))
+      return { speaker: line.speaker, words: targetWords.map(w => ({ word: w, found: !normalizeWord(w) || userSet.has(normalizeWord(w)) })) }
     })
   }, [showDiff, lines, userText])
 
@@ -84,7 +87,7 @@ export function FreeWriteMode() {
           {lines.map((line, i) => (
             <p key={i} className="text-xs text-[var(--color-gray-600)] mb-0.5 font-mono tracking-wide">
               <span className="font-bold" style={{ color: line.speaker === 'GUY' || line.speaker === 'PERFORMER' ? colors.greenDark : colors.pink }}>{line.speaker}: </span>
-              {line.text.split(/\s+/).map(w => { const m = w.match(/^[^a-zA-Z]*([a-zA-Z])/); return m ? m[1] : w }).join(' ')}
+              {line.text.split(/\s+/).map(firstLetterOf).join(' ')}
             </p>
           ))}
         </div>
