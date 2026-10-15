@@ -18,6 +18,9 @@ interface AppContextValue {
   setCurrentSkitId: (id: string) => void
   skitLibrary: Skit[]
   refreshLibrary: () => Promise<void>
+  /** Section being studied ('all' or a chunk id), shared by the study steps */
+  section: string
+  setSection: (s: string) => void
 }
 
 const AppCtx = createContext<AppContextValue | null>(null)
@@ -37,6 +40,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCurrentSkitIdState(id)
     try { localStorage.setItem(LAST_SKIT_KEY, id) } catch { /* private mode */ }
   }, [])
+  // Kept with its text id so switching texts starts again at 'all'
+  const [studied, setStudied] = useState<{ skitId: string; section: string }>({ skitId: '', section: 'all' })
+  const section = studied.skitId === currentSkitId ? studied.section : 'all'
+  const setSection = useCallback((s: string) => setStudied({ skitId: currentSkitId, section: s }), [currentSkitId])
   const [activeTool, setActiveToolState] = useState<ToolId>('read')
   const [visited, setVisited] = useState<Set<ToolId>>(new Set(['read']))
 
@@ -67,7 +74,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AppCtx.Provider value={{ activeTool, setActiveTool, visited, currentSkitId, setCurrentSkitId, skitLibrary, refreshLibrary }}>
+    <AppCtx.Provider value={{ activeTool, setActiveTool, visited, currentSkitId, setCurrentSkitId, skitLibrary, refreshLibrary, section, setSection }}>
       {children}
     </AppCtx.Provider>
   )
