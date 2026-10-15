@@ -198,7 +198,7 @@ function SkitCard({
       {/* Bottom row: metadata + progress */}
       <div className="flex justify-between items-center mt-2.5">
         <div className="flex gap-3.5 text-xs text-[var(--color-text-muted)]">
-          <span>{skit.chunks.length} sections</span>
+          <span>{skit.chunks.length} {skit.chunks.length === 1 ? 'section' : 'sections'}</span>
           <span>{lineCount} lines</span>
           <span>{wordCount} words</span>
         </div>

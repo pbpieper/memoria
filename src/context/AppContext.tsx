@@ -6,7 +6,7 @@ import { normalizeSkit } from '@/lib/text'
 
 const LAST_SKIT_KEY = 'memoria:lastSkitId'
 
-function readLastSkitId(): string {
+export function readLastSkitId(): string {
   try { return localStorage.getItem(LAST_SKIT_KEY) ?? '' } catch { return '' }
 }
 

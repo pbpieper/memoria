@@ -66,11 +66,11 @@ export function AuthScreen({ onSkip }: Props) {
       <div className="auth-card">
         <div className="auth-header">
           <h1 className="auth-title">
-            {mode === 'signin' ? 'Sign in to sync' : 'Create account'}
+            {mode === 'signin' ? 'Memoria' : 'Create account'}
           </h1>
           <p className="auth-subtitle">
             {mode === 'signin'
-              ? 'Your texts and progress follow you to every device'
+              ? 'Learn a poem, a song or a speech by heart, one step at a time. Sign in to keep it on every device.'
               : 'Start tracking your memorization journey'}
           </p>
         </div>
@@ -157,7 +157,7 @@ export function AuthScreen({ onSkip }: Props) {
           <div className="auth-local">
             <div className="auth-divider"><span>or</span></div>
             <button type="button" className="auth-local-btn" onClick={onSkip}>
-              Continue without account
+              Try it without an account
             </button>
             <p className="auth-local-note">Saved on this device only. You can sign in later from the header.</p>
           </div>
