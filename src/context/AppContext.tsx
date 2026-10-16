@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 import type { Skit } from '@/types/skit'
 import type { ToolId } from '@/types/tools'
 import { useServices } from '@/services/ServiceProvider'
+import { normalizeSkit } from '@/lib/text'
 
 interface AppContextValue {
   activeTool: ToolId
@@ -30,7 +31,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const refreshLibrary = useCallback(async () => {
     try {
-      const skits = await skitService.listSkits()
+      // Long pasted songs get readable sections; nothing is written back
+      const skits = (await skitService.listSkits()).map(normalizeSkit)
       setSkitLibrary(skits)
       if (!currentSkitId && skits.length > 0) {
         setCurrentSkitId(skits[0].id)
