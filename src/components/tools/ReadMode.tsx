@@ -8,11 +8,9 @@ import { SciencePanel } from '@/components/molecules/SciencePanel'
 import { InlineTags } from '@/components/molecules/InlineTags'
 import type { Chunk, Line } from '@/types/skit'
 import toast from 'react-hot-toast'
-import { hasMultipleSpeakers } from '@/lib/text'
 
 export function ReadMode() {
-  const { chunks, skitId, tags, speakers } = useSkitContext()
-  const showSpeaker = hasMultipleSpeakers(speakers)
+  const { chunks, skitId, tags } = useSkitContext()
   const { refreshLibrary, skitLibrary } = useApp()
   const { skitService } = useServices()
   const { available, speak } = useCreativeHub()
@@ -195,8 +193,8 @@ export function ReadMode() {
                     />
                   </div>
                 ) : (
-                  <p className="text-base text-[var(--color-text-primary)] leading-relaxed">
-                    {showSpeaker && <span className="font-bold text-[var(--color-pink)]">{line.speaker}: </span>}
+                  <p className="text-[13px] text-[var(--color-text-primary)] leading-relaxed">
+                    <span className="font-bold text-[var(--color-pink)]">{line.speaker}: </span>
                     {line.text}
                   </p>
                 )}
@@ -205,7 +203,7 @@ export function ReadMode() {
                   <>
                     {available && (
                       <button
-                        onClick={() => handleSpeak(`${chunk.id}-${li}`, showSpeaker ? `${line.speaker}: ${line.text}` : line.text)}
+                        onClick={() => handleSpeak(`${chunk.id}-${li}`, `${line.speaker}: ${line.text}`)}
                         className="text-[10px] mt-1 mr-2 px-2 py-0.5 rounded-md border border-[var(--color-gray-300)] bg-[var(--color-gray-100)] text-[var(--color-gray-600)] cursor-pointer"
                       >
                         {speaking === `${chunk.id}-${li}` ? '⏹ Stop' : '🔊 Hear'}

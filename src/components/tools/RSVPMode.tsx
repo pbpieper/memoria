@@ -5,13 +5,11 @@ import { SectionSelect } from '@/components/molecules/SectionSelect'
 import { getLinesForSection } from '@/lib/helpers'
 import { colors } from '@/design/tokens'
 import clsx from 'clsx'
-import { hasMultipleSpeakers } from '@/lib/text'
 
 const WPM_PRESETS = [100, 200, 300, 450, 600, 900, 1324]
 
 export function RSVPMode() {
-  const { flatLines, macroSections, chunks, speakers } = useSkitContext()
-  const showSpeaker = hasMultipleSpeakers(speakers)
+  const { flatLines, macroSections, chunks } = useSkitContext()
   const [wpm, setWpm] = useState(250)
   const [isPlaying, setIsPlaying] = useState(false)
   const [wordIdx, setWordIdx] = useState(0)
@@ -23,11 +21,11 @@ export function RSVPMode() {
     const lines = getLinesForSection(section, flatLines, macroSections, chunks)
     const result: Array<{ text: string; isSpeaker: boolean; speaker: string }> = []
     lines.forEach(line => {
-      if (showSpeaker) result.push({ text: `${line.speaker}:`, isSpeaker: true, speaker: line.speaker })
+      result.push({ text: `${line.speaker}:`, isSpeaker: true, speaker: line.speaker })
       line.text.split(/\s+/).forEach(w => result.push({ text: w, isSpeaker: false, speaker: line.speaker }))
     })
     return result
-  }, [section, flatLines, macroSections, chunks, showSpeaker])
+  }, [section, flatLines, macroSections, chunks])
 
   useEffect(() => {
     if (isPlaying) {

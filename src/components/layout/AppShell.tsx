@@ -6,6 +6,7 @@ import { useTheme } from '@/design/theme'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { useSessionTracker } from '@/hooks/useSessionTracker'
 import { useServices } from '@/services/ServiceProvider'
+import { METHODS } from '@/data/methods'
 import { SEED_SKITS } from '@/data/skits'
 import { decodeSkitFromUrl } from '@/lib/sharing'
 import { TabBar } from '@/components/molecules/TabBar'
@@ -35,14 +36,6 @@ import { StudyGuide } from '@/components/tools/StudyGuide'
 import type { ToolId } from '@/types/tools'
 import type { Skit } from '@/types/skit'
 import { AccountButton } from '@/components/auth/AccountButton'
-
-/** The default way through a text: read it, then retrieve it with less and less help. */
-const STUDY_PATH: Array<{ id: ToolId; label: string }> = [
-  { id: 'read', label: 'Read' },
-  { id: 'firstletter', label: 'First letters' },
-  { id: 'fill', label: 'Fill blanks' },
-  { id: 'freewrite', label: 'Write it' },
-]
 
 function ToolContent({ toolId }: { toolId: ToolId }) {
   const { setActiveTool } = useApp()
@@ -76,8 +69,6 @@ export function AppShell() {
   const { skitService } = useServices()
   const [view, setView] = useState<'library' | 'practice'>('practice')
   const [importerOpen, setImporterOpen] = useState(false)
-  const [showAllTools, setShowAllTools] = useState(false)
-  const [showExtras, setShowExtras] = useState(false)
 
   // --- Share via URL: check for ?skit= param on mount ---
   useEffect(() => {
@@ -113,8 +104,7 @@ export function AppShell() {
     setActiveTool('read')
   }, [setActiveTool])
 
-  const stepIdx = STUDY_PATH.findIndex(s => s.id === activeTool)
-  const nextStep = stepIdx >= 0 ? STUDY_PATH[stepIdx + 1] : undefined
+  const progress = (visited.size / METHODS.length) * 100
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--color-bg)', fontFamily: 'var(--font-sans)' }}>
@@ -142,16 +132,38 @@ export function AppShell() {
             </div>
           </div>
 
-          {/* View toggle */}
-          <div className="mt-3 flex rounded-lg overflow-hidden border border-[var(--color-border)] w-fit">
-            {(['library', 'practice'] as const).map(v => (
-              <button key={v} onClick={() => setView(v)}
+          {/* View toggle + progress bar */}
+          <div className="mt-3 flex items-center gap-3">
+            <div className="flex rounded-lg overflow-hidden border border-[var(--color-border)]">
+              <button
+                onClick={() => setView('library')}
                 className={`px-3 py-1.5 text-xs font-semibold cursor-pointer transition-colors border-none ${
-                  view === v ? 'bg-[var(--color-green-main)] text-white' : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-gray-100)]'
-                }`}>
-                {v === 'library' ? '📚 Library' : '🎯 Practice'}
+                  view === 'library'
+                    ? 'bg-[var(--color-green-main)] text-white'
+                    : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-gray-100)]'
+                }`}
+              >
+                📚 Library
               </button>
-            ))}
+              <button
+                onClick={() => setView('practice')}
+                className={`px-3 py-1.5 text-xs font-semibold cursor-pointer transition-colors border-none border-l border-l-[var(--color-border)] ${
+                  view === 'practice'
+                    ? 'bg-[var(--color-green-main)] text-white'
+                    : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-gray-100)]'
+                }`}
+              >
+                🎯 Practice
+              </button>
+            </div>
+            {view === 'practice' && (
+              <div className="flex-1 flex items-center gap-2">
+                <div className="flex-1 h-1 rounded-sm" style={{ background: 'var(--color-gray-200)' }}>
+                  <div className="h-1 rounded-sm transition-[width] duration-400" style={{ background: 'var(--color-green-main)', width: `${progress}%` }} />
+                </div>
+                <span className="text-[10px] text-[var(--color-text-secondary)]">{visited.size}/{METHODS.length}</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -200,58 +212,22 @@ export function AppShell() {
               </div>
             )}
 
-            {/* Study path: the four steps, in order */}
-            <div className="grid grid-cols-4 gap-1.5 mb-2">
-              {STUDY_PATH.map((step, n) => (
-                <button key={step.id} onClick={() => { setActiveTool(step.id); setShowAllTools(false) }}
-                  className={`py-2 px-1 rounded-xl border text-center cursor-pointer transition-colors ${
-                    activeTool === step.id
-                      ? 'border-[var(--color-green-main)] bg-[var(--color-green-main)] text-white'
-                      : visited.has(step.id)
-                      ? 'border-[var(--color-green-light)] bg-[var(--color-green-faded)] text-[var(--color-green-dark)]'
-                      : 'border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-secondary)]'
-                  }`}>
-                  <div className="text-[10px] opacity-75">{n + 1}</div>
-                  <div className="text-xs font-semibold leading-tight">{step.label}</div>
-                </button>
-              ))}
-            </div>
+            {/* Goal + Daily Todos */}
+            <GoalSetter />
+            <DailyTodos onNavigate={setActiveTool} />
 
-            <div className="flex gap-3 mb-3 text-xs">
-              <button onClick={() => setShowAllTools(v => !v)}
-                className="bg-transparent border-none p-0 cursor-pointer text-[var(--color-text-muted)] hover:text-[var(--color-green-main)]">
-                {showAllTools ? '▾' : '▸'} All tools
-              </button>
-              {currentSkitId && (
-                <button onClick={() => setShowExtras(v => !v)}
-                  className="bg-transparent border-none p-0 cursor-pointer text-[var(--color-text-muted)] hover:text-[var(--color-green-main)]">
-                  {showExtras ? '▾' : '▸'} Goals & notes
-                </button>
-              )}
-            </div>
+            {/* Today's Goal */}
+            {currentSkitId && <TodayGoal />}
 
-            {showAllTools && <TabBar active={activeTool} visited={visited} onSelect={setActiveTool} />}
+            {/* Notes Panel */}
+            {currentSkitId && <NotesPanel />}
 
-            {showExtras && (
-              <div className="mb-3">
-                <GoalSetter />
-                <DailyTodos onNavigate={setActiveTool} />
-                {currentSkitId && <TodayGoal />}
-                {currentSkitId && <NotesPanel />}
-              </div>
-            )}
+            {/* Tab Bar (categorized) */}
+            <TabBar active={activeTool} visited={visited} onSelect={setActiveTool} />
 
             {/* Tool Content */}
-            <div className="p-4 border border-[var(--color-border)] rounded-xl min-h-[300px]" style={{ background: 'var(--color-surface)' }}>
+            <div className="p-4.5 border border-[var(--color-border)] rounded-xl min-h-[300px]" style={{ background: 'var(--color-surface)' }}>
               <ToolContent key={`${currentSkitId}-${activeTool}`} toolId={activeTool} />
-              {nextStep && (
-                <div className="mt-6 pt-3 border-t border-[var(--color-border)] flex justify-end">
-                  <button onClick={() => setActiveTool(nextStep.id)}
-                    className="px-4 py-2 rounded-lg border-none bg-[var(--color-green-main)] text-white text-sm font-semibold cursor-pointer">
-                    Next: {nextStep.label} →
-                  </button>
-                </div>
-              )}
             </div>
           </>
         )}

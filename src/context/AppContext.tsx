@@ -2,13 +2,6 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 import type { Skit } from '@/types/skit'
 import type { ToolId } from '@/types/tools'
 import { useServices } from '@/services/ServiceProvider'
-import { normalizeSkit } from '@/lib/text'
-
-const LAST_SKIT_KEY = 'memoria:lastSkitId'
-
-function readLastSkitId(): string {
-  try { return localStorage.getItem(LAST_SKIT_KEY) ?? '' } catch { return '' }
-}
 
 interface AppContextValue {
   activeTool: ToolId
@@ -31,22 +24,16 @@ export function useApp() {
 export function AppProvider({ children }: { children: ReactNode }) {
   const { skitService } = useServices()
   const [skitLibrary, setSkitLibrary] = useState<Skit[]>([])
-  const [currentSkitId, setCurrentSkitIdState] = useState<string>('')
-
-  const setCurrentSkitId = useCallback((id: string) => {
-    setCurrentSkitIdState(id)
-    try { localStorage.setItem(LAST_SKIT_KEY, id) } catch { /* private mode */ }
-  }, [])
+  const [currentSkitId, setCurrentSkitId] = useState<string>('')
   const [activeTool, setActiveToolState] = useState<ToolId>('read')
   const [visited, setVisited] = useState<Set<ToolId>>(new Set(['read']))
 
   const refreshLibrary = useCallback(async () => {
     try {
-      const skits = (await skitService.listSkits()).map(normalizeSkit)
+      const skits = await skitService.listSkits()
       setSkitLibrary(skits)
       if (!currentSkitId && skits.length > 0) {
-        const last = readLastSkitId()
-        setCurrentSkitIdState(skits.some(s => s.id === last) ? last : skits[0].id)
+        setCurrentSkitId(skits[0].id)
       }
     } catch (e) {
       console.warn('[AppContext] Failed to load library:', e)
