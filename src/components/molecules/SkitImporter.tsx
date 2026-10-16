@@ -6,13 +6,11 @@ import { parseSkitFromText } from '@/data/skit-parser'
 import { useServices } from '@/services/ServiceProvider'
 import { useCreativeHub } from '@/hooks/useCreativeHub'
 import toast from 'react-hot-toast'
-import type { Skit } from '@/types/skit'
-import { hasMultipleSpeakers } from '@/lib/text'
 
 interface Props {
   open: boolean
   onClose: () => void
-  onCreated: (skit: Skit) => void
+  onCreated: () => void
 }
 
 export function SkitImporter({ open, onClose, onCreated }: Props) {
@@ -26,10 +24,7 @@ export function SkitImporter({ open, onClose, onCreated }: Props) {
 
   const handlePreview = () => {
     if (!raw.trim()) return
-    // No title typed: use the text's first line, like a poem's first line
-    const firstLine = raw.trim().split('\n')[0].replace(/^[A-Z][A-Z .'-]{0,29}:\s*/, '').trim()
-    const fallback = firstLine.length > 40 ? firstLine.slice(0, 40).replace(/\s+\S*$/, '') + '…' : firstLine
-    const parsed = parseSkitFromText(raw, { title: title.trim() || fallback || undefined })
+    const parsed = parseSkitFromText(raw, { title: title || undefined })
     setPreview(parsed)
   }
 
@@ -53,21 +48,20 @@ export function SkitImporter({ open, onClose, onCreated }: Props) {
   const handleCreate = async () => {
     if (!preview) return
     const skitWithTags = { ...preview, tags }
-    let created: Skit
     try {
-      created = await skitService.createSkit(skitWithTags)
+      await skitService.createSkit(skitWithTags)
     } catch (e) {
       console.error('[SkitImporter] createSkit failed:', e)
       const detail = e instanceof Error ? e.message : (e as { message?: string })?.message
       toast.error(`Couldn't save "${preview.title}"${detail ? `: ${detail}` : ''}`, { duration: 6000 })
       return
     }
-    toast.success(`Added "${preview.title}"`)
+    toast.success(`Created "${preview.title}"`)
     setRaw('')
     setTitle('')
     setTags([])
     setPreview(null)
-    onCreated(created)
+    onCreated()
     onClose()
   }
 
@@ -77,12 +71,12 @@ export function SkitImporter({ open, onClose, onCreated }: Props) {
   }
 
   return (
-    <Modal open={open} onClose={handleClose} title="Add a text">
+    <Modal open={open} onClose={handleClose} title="Add New Skit">
       {!preview ? (
         <div className="flex flex-col gap-3">
           <input
             type="text"
-            placeholder="Title (optional)"
+            placeholder="Skit title (optional)"
             value={title}
             onChange={e => setTitle(e.target.value)}
             className="px-3 py-2 rounded-lg border-2 border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text-primary)]"
@@ -92,7 +86,7 @@ export function SkitImporter({ open, onClose, onCreated }: Props) {
             <InlineTags tags={tags} onChange={setTags} editable={true} />
           </div>
           <textarea
-            placeholder={"Paste what you want to learn: a poem, a song, a speech…\n\nA blank line starts a new section.\nFor a dialogue, start each line with the name, e.g.\nANNA: Hello."}
+            placeholder={"Paste your script here...\n\nFormat: SPEAKER: Line text\nOr just paste plain text (one speaker assumed)\n\nSeparate chunks with blank lines."}
             value={raw}
             onChange={e => setRaw(e.target.value)}
             rows={12}
@@ -127,7 +121,7 @@ export function SkitImporter({ open, onClose, onCreated }: Props) {
                 </p>
                 {c.lines.map((l, i) => (
                   <p key={i} className="text-xs text-[var(--color-text-primary)] ml-2 mb-0.5">
-                    {hasMultipleSpeakers(preview.speakers) && <span className="font-semibold text-[var(--color-pink)]">{l.speaker}: </span>}{l.text}
+                    <span className="font-semibold text-[var(--color-pink)]">{l.speaker}:</span> {l.text}
                   </p>
                 ))}
               </div>
@@ -135,7 +129,7 @@ export function SkitImporter({ open, onClose, onCreated }: Props) {
           </div>
           <div className="flex gap-2">
             <Button variant="ghost" onClick={() => setPreview(null)}>Back</Button>
-            <Button onClick={handleCreate}>Start learning</Button>
+            <Button onClick={handleCreate}>Create Skit</Button>
           </div>
         </div>
       )}

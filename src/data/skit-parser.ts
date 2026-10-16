@@ -85,7 +85,7 @@ export function parseSkitFromText(raw: string, options?: ParseOptions): Omit<Ski
 
   return {
     title: options?.title ?? 'Untitled Skit',
-    subtitle: options?.subtitle ?? (speakers.length > 1 ? `${chunks.length} chunks, ${speakers.join(', ')}` : `${chunks.length} ${chunks.length === 1 ? 'section' : 'sections'}`),
+    subtitle: options?.subtitle ?? (speakers.length > 1 ? `${chunks.length} chunks, ${speakers.join(', ')}` : `${chunks.length} sections`),
     speakers,
     chunks,
     palaceImages: [],

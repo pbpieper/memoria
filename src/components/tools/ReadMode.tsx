@@ -162,7 +162,6 @@ export function ReadMode() {
       )}
 
       {!editMode && <SectionChips chunks={chunks} value={section} onChange={setSection} />}
-      {!editMode && <p className="text-xs text-[var(--color-text-muted)] mb-3">Read it through, out loud if you can. When it feels familiar, tap Next.</p>}
 
       {visibleChunks.map((chunk, ci) => (
         <div key={chunk.id} className="mb-4 p-3 rounded-xl bg-[var(--color-surface-alt)] border border-[var(--color-border)]">

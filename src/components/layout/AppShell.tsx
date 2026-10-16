@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import { useApp, readLastSkitId } from '@/context/AppContext'
+import { useApp } from '@/context/AppContext'
 import { useSkitContext } from '@/context/SkitContext'
 import { useGoal } from '@/context/GoalContext'
 import { useTheme } from '@/design/theme'
@@ -74,8 +74,7 @@ export function AppShell() {
   const { streak } = useGoal()
   const { isDark, toggle } = useTheme()
   const { skitService } = useServices()
-  // First visit on this device: start in the Library, which says what Memoria is for
-  const [view, setView] = useState<'library' | 'practice'>(() => readLastSkitId() ? 'practice' : 'library')
+  const [view, setView] = useState<'library' | 'practice'>('practice')
   const [importerOpen, setImporterOpen] = useState(false)
   const [showAllTools, setShowAllTools] = useState(false)
   const [showExtras, setShowExtras] = useState(false)
@@ -113,14 +112,6 @@ export function AppShell() {
     setView('practice')
     setActiveTool('read')
   }, [setActiveTool])
-
-  // A text you just added opens straight into step 1
-  const handleCreated = useCallback(async (skit: Skit) => {
-    await refreshLibrary()
-    setCurrentSkitId(skit.id)
-    setView('practice')
-    setActiveTool('read')
-  }, [refreshLibrary, setCurrentSkitId, setActiveTool])
 
   const stepIdx = STUDY_PATH.findIndex(s => s.id === activeTool)
   const nextStep = stepIdx >= 0 ? STUDY_PATH[stepIdx + 1] : undefined
@@ -267,7 +258,7 @@ export function AppShell() {
       </div>
 
       {/* Importer Modal */}
-      <SkitImporter open={importerOpen} onClose={() => setImporterOpen(false)} onCreated={handleCreated} />
+      <SkitImporter open={importerOpen} onClose={() => setImporterOpen(false)} onCreated={refreshLibrary} />
     </div>
   )
 }
