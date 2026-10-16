@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react'
 import { useSkitContext } from '@/context/SkitContext'
 import { SciencePanel } from '@/components/molecules/SciencePanel'
-import { SectionChips, linesForSection } from '@/components/molecules/SectionChips'
-import { useApp } from '@/context/AppContext'
+import { SectionSelect } from '@/components/molecules/SectionSelect'
+import { getLinesForSection } from '@/lib/helpers'
 import { colors } from '@/design/tokens'
 import clsx from 'clsx'
 import { normalizeWord, firstLetterOf } from '@/lib/text'
@@ -17,14 +17,14 @@ const HINT_TYPES = [
 ]
 
 export function FreeWriteMode() {
-  const { chunks, palaceImages } = useSkitContext()
-  const { section, setSection } = useApp()
+  const { chunks, flatLines, macroSections, palaceImages } = useSkitContext()
+  const [section, setSection] = useState('all')
   const [hintType, setHintType] = useState('scene')
   const [userText, setUserText] = useState('')
   const [checked, setChecked] = useState(false)
   const [showDiff, setShowDiff] = useState(false)
 
-  const lines = useMemo(() => linesForSection(chunks, section), [chunks, section])
+  const lines = useMemo(() => getLinesForSection(section, flatLines, macroSections, chunks), [section, flatLines, macroSections, chunks])
   const fullText = lines.map(l => l.text).join(' ')
 
   const sceneHints = useMemo(() => {
@@ -68,7 +68,7 @@ export function FreeWriteMode() {
       <p className="text-xs text-[var(--color-text-secondary)] mb-1">Write the entire section from memory. No blanks, no scaffolding — just you and the page.</p>
       <p className="text-[11px] text-[var(--color-text-muted)] mb-3">Choose your hint level below.</p>
 
-      <SectionChips chunks={chunks} value={section} onChange={s => { setSection(s); reset() }} />
+      <SectionSelect value={section} onChange={s => { setSection(s); reset() }} macroSections={macroSections} chunks={chunks} />
 
       <div className="flex gap-1 flex-wrap mt-2.5 mb-3.5 items-center">
         <span className="text-xs text-[var(--color-text-secondary)]">Hint:</span>

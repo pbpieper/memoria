@@ -27,16 +27,6 @@ export function firstLetterOf(word: string): string {
   return m[1] + m[2] + trail
 }
 
-/** Word → first letter, a dot per other letter, punctuation kept. "l'argent," → "l'······," */
-export function lengthHint(word: string): string {
-  let seen = false
-  return word.replace(/[\p{L}\p{N}]/gu, ch => {
-    if (seen) return '·'
-    seen = true
-    return ch
-  })
-}
-
 /** Speaker labels only help when a text has more than one speaker. */
 export function hasMultipleSpeakers(speakers: string[]): boolean {
   return speakers.filter(s => s && s.trim()).length > 1

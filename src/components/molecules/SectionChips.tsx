@@ -10,9 +10,7 @@ export interface SectionLine {
 
 /** Lines of one section ('all' or a chunk id as string). */
 export function linesForSection(chunks: Chunk[], section: string): SectionLine[] {
-  const one = chunks.filter(c => String(c.id) === section)
-  // A section that no longer exists (text edited, re-split) falls back to everything
-  const picked = one.length ? one : chunks
+  const picked = section === 'all' ? chunks : chunks.filter(c => String(c.id) === section)
   return picked.flatMap(c => c.lines.map((l, i) => ({ text: l.text, speaker: l.speaker, chunkId: c.id, firstOfChunk: i === 0 })))
 }
 

@@ -1,6 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useSkitContext } from '@/context/SkitContext'
-import { useApp } from '@/context/AppContext'
 import { SectionChips, linesForSection } from '@/components/molecules/SectionChips'
 import { normalizeWord, letterCount, firstLetterOf, hasMultipleSpeakers } from '@/lib/text'
 import clsx from 'clsx'
@@ -21,7 +20,7 @@ const REVEAL_AFTER = 3 // wrong tries before the word is shown
 
 export function FillMode() {
   const { chunks, speakers } = useSkitContext()
-  const { section, setSection } = useApp()
+  const [section, setSection] = useState('all')
   const [level, setLevel] = useState<LevelId>('easy')
   const [gen, setGen] = useState(0)
   const [answers, setAnswers] = useState<Record<number, string>>({})

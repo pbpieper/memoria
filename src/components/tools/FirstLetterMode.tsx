@@ -1,20 +1,18 @@
 import { useState, useMemo } from 'react'
 import { useSkitContext } from '@/context/SkitContext'
-import { useApp } from '@/context/AppContext'
 import { SectionChips, linesForSection } from '@/components/molecules/SectionChips'
-import { lengthHint, hasMultipleSpeakers } from '@/lib/text'
+import { firstLetterOf, hasMultipleSpeakers } from '@/lib/text'
 import { colors } from '@/design/tokens'
 import clsx from 'clsx'
 
 export function FirstLetterMode() {
   const { chunks, speakers } = useSkitContext()
-  const { section, setSection } = useApp()
+  const [section, setSection] = useState('all')
   const [revealedLines, setRevealedLines] = useState<Set<number>>(new Set())
   const lines = useMemo(() => linesForSection(chunks, section), [chunks, section])
   const showSpeaker = hasMultipleSpeakers(speakers)
 
-  // v1 style: the dots show each word's length too
-  const toFirstLetters = (text: string) => text.split(/\s+/).map(lengthHint).join(' ')
+  const toFirstLetters = (text: string) => text.split(/\s+/).map(firstLetterOf).join(' ')
 
   return (
     <div>
@@ -31,7 +29,7 @@ export function FirstLetterMode() {
               {showSpeaker && (
                 <span className="font-bold" style={{ color: colors.pink }}>{line.speaker}:{' '}</span>
               )}
-              <span className={clsx(!isR && 'font-mono break-words')}>{isR ? line.text : toFirstLetters(line.text)}</span>
+              <span className={clsx(!isR && 'tracking-wider font-mono')}>{isR ? line.text : toFirstLetters(line.text)}</span>
             </p>
           </div>
         )

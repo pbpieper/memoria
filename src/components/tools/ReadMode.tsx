@@ -6,7 +6,6 @@ import { useCreativeHub } from '@/hooks/useCreativeHub'
 import { useDebouncedSave } from '@/hooks/useDebouncedSave'
 import { SciencePanel } from '@/components/molecules/SciencePanel'
 import { InlineTags } from '@/components/molecules/InlineTags'
-import { SectionChips } from '@/components/molecules/SectionChips'
 import type { Chunk, Line } from '@/types/skit'
 import toast from 'react-hot-toast'
 import { hasMultipleSpeakers } from '@/lib/text'
@@ -14,7 +13,7 @@ import { hasMultipleSpeakers } from '@/lib/text'
 export function ReadMode() {
   const { chunks, skitId, tags, speakers } = useSkitContext()
   const showSpeaker = hasMultipleSpeakers(speakers)
-  const { refreshLibrary, skitLibrary, section, setSection } = useApp()
+  const { refreshLibrary, skitLibrary } = useApp()
   const { skitService } = useServices()
   const { available, speak } = useCreativeHub()
   const [revealed, setRevealed] = useState<Set<string>>(new Set())
@@ -25,9 +24,6 @@ export function ReadMode() {
 
   const currentSkit = skitLibrary.find(s => s.id === skitId)
   const displayChunks = editedChunks ?? chunks
-  // Edit mode shows every section (edits are indexed into the full list)
-  const picked = displayChunks.filter(c => String(c.id) === section)
-  const visibleChunks = editMode || !picked.length ? displayChunks : picked
 
   // Debounced tag saving — tags are synced after 1.5s of inactivity
   const { save: debouncedSaveTags, isPending: tagsSaving } = useDebouncedSave<string[]>(
@@ -161,9 +157,7 @@ export function ReadMode() {
         </div>
       )}
 
-      {!editMode && <SectionChips chunks={chunks} value={section} onChange={setSection} />}
-
-      {visibleChunks.map((chunk, ci) => (
+      {displayChunks.map((chunk, ci) => (
         <div key={chunk.id} className="mb-4 p-3 rounded-xl bg-[var(--color-surface-alt)] border border-[var(--color-border)]">
           {/* Chunk label */}
           {editMode ? (
