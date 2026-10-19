@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="utf-8">
+<title>Exercise Lab · Memoria</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Geist';src:url('fonts/Geist-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
+@font-face{font-family:'Geist';src:url('fonts/Geist-Medium.ttf') format('truetype');font-weight:500;font-display:swap}
+@font-face{font-family:'Geist';src:url('fonts/Geist-SemiBold.ttf') format('truetype');font-weight:600;font-display:swap}
+@font-face{font-family:'Geist';src:url('fonts/Geist-Bold.ttf') format('truetype');font-weight:700;font-display:swap}
+@font-face{font-family:'Space Mono';src:url('fonts/SpaceMono-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:#0F172A}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:none}
+::placeholder{color:#64748B}
+input[type=range]{-webkit-appearance:none;appearance:none;height:4px;border-radius:3px;background:#334155;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;border-radius:50%;background:#CBD5E1;border:2px solid #1E293B}
+</style>
+<script src="exercises-data.js"></script>
+</helmet>
+<div style="min-height:100vh;background:#0F172A;color:#F1F5F9;font-family:'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.5">
+
+  <header style="max-width:1180px;margin:0 auto;padding:30px 28px 18px;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:9px;height:9px;border-radius:50%;background:#34D399"></div>
+        <div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#64748B;font-weight:600">Memoria · internal tool</div>
+      </div>
+      <h1 style="margin:7px 0 4px;font-size:27px;font-weight:700;letter-spacing:-.01em">Exercise Lab</h1>
+      <div style="color:#94A3B8;font-size:13px;max-width:560px">Source of truth for the exercise set. Nodes translate across views. Dashed = Off.</div>
+      <button onClick="{{ onReadme }}" style="{{ readmeBtnStyle }}">{{ readmeLabel }}</button>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:12px">
+      <div style="font-family:'Space Mono',monospace;font-size:12px;color:#94A3B8">{{ stats.total }} nodes · <span style="color:#6EE7B7">{{ stats.on }} on</span> · <span style="color:#64748B">{{ stats.off }} off</span></div>
+    </div>
+  </header>
+
+  <div style="max-width:1180px;margin:0 auto;padding:0 28px 4px">
+    <!-- ════ ARCHITECTURE ════ -->
+    <sc-if value="{{ isArch }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:900px;display:flex;flex-direction:column;gap:14px;padding-bottom:8px">
+
+        <div>
+          <div style="font-size:19px;font-weight:700;margin-bottom:5px">ReadMe — the whole project in one place</div>
+          <div style="font-size:13px;color:#94A3B8;line-height:1.6">Memoria helps someone memorize a text by walking it from easy to hard, section by section. There are two surfaces: this <b style="color:#E2E8F0">Lab</b>, where the exercise model is defined, and the <b style="color:#E2E8F0">prototype app</b>, where a learner actually climbs. Both read the same data file, so anything changed here shows up there. Start at the top if you have never seen this before.</div>
+        </div>
+
+        <div style="background:#15243B;border:1px solid #2F5D4A;border-radius:12px;padding:16px 18px">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#6EE7B7;font-weight:700;margin-bottom:7px">The one idea</div>
+          <div style="font-size:14.5px;color:#E2E8F0;line-height:1.65">An exercise is not a fixed thing — it is a <b style="color:#fff">point in a space</b>. Memorizing a text is walking that space from easy to hard, <b style="color:#fff">section by section</b>, until the whole piece is yours. Every view in this Lab is a different projection of that same space.</div>
+        </div>
+
+        <div style="background:#1E293B;border:1px solid #334155;border-radius:12px;padding:16px 18px">
+          <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:#64748B;font-weight:700;margin-bottom:9px">01 · The model</div>
+          <div style="font-size:14px;font-weight:700;margin-bottom:9px;color:#F1F5F9">Three axes — the dials every exercise sets</div>
+          <div style="display:flex;flex-direction:column;gap:11px">
+            <div style="display:flex;gap:11px"><div style="width:84px;flex-shrink:0;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#60A5FA;padding-top:1px">Grade</div><div style="font-size:13px;color:#CBD5E1;line-height:1.65"><span style="color:#94A3B8">cognitive demand —</span> Meet → Recognize → Recall → Produce → Perform. <span style="color:#64748B">The climb. What the brain is asked to do.</span></div></div>
+            <div style="display:flex;gap:11px"><div style="width:84px;flex-shrink:0;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#F472B6;padding-top:1px">Modality</div><div style="font-size:13px;color:#CBD5E1;line-height:1.65"><span style="color:#94A3B8">the channel —</span> Read · Write · Speak · Listen. <span style="color:#64748B">Which sense does the work.</span></div></div>
+            <div style="display:flex;gap:11px"><div style="width:84px;flex-shrink:0;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#34D399;padding-top:1px">Scaffold</div><div style="font-size:13px;color:#CBD5E1;line-height:1.65"><span style="color:#94A3B8">support strength —</span> full text → first-letters → nothing. <span style="color:#64748B">How much help is shown. The continuous difficulty dial.</span></div></div>
+          </div>
+          <div style="margin-top:12px;padding-top:11px;border-top:1px solid #334155;font-size:12.5px;color:#94A3B8;line-height:1.6">A concrete exercise = <span style="font-family:'Space Mono',monospace;color:#CBD5E1">{ grade, modality, scaffold }</span>. <b style="color:#E2E8F0">Speed-read and Cloze are not different exercises</b> — they are different points. Slide the scaffold and one becomes the other.</div>
+        </div>
+
+        <div style="background:#1E293B;border:1px solid #334155;border-radius:12px;padding:16px 18px">
+          <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:#64748B;font-weight:700;margin-bottom:9px">02 · The spine</div>
+          <div style="font-size:14px;font-weight:700;margin-bottom:9px;color:#F1F5F9">Five levels, one per step of the climb</div>
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-top:1px solid #24334c"><div style="font-family:'Space Mono',monospace;font-size:11px;color:#64748B;width:20px;flex-shrink:0;padding-top:2px">01</div><div style="width:88px;flex-shrink:0;font-size:13px;font-weight:700;color:#60A5FA">Meet</div><div style="flex:1;font-size:12.5px;color:#94A3B8;line-height:1.55">First contact. The text is fully shown; the job is exposure — read it, hear it, type along with it.</div></div>
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-top:1px solid #24334c"><div style="font-family:'Space Mono',monospace;font-size:11px;color:#64748B;width:20px;flex-shrink:0;padding-top:2px">02</div><div style="width:88px;flex-shrink:0;font-size:13px;font-weight:700;color:#38BDF8">Recognize</div><div style="flex:1;font-size:12.5px;color:#94A3B8;line-height:1.55">The text is partly hidden. You confirm you know what belongs in the gaps — cloze at 25%, first letters.</div></div>
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-top:1px solid #24334c"><div style="font-family:'Space Mono',monospace;font-size:11px;color:#64748B;width:20px;flex-shrink:0;padding-top:2px">03</div><div style="width:88px;flex-shrink:0;font-size:13px;font-weight:700;color:#34D399">Recall</div><div style="flex:1;font-size:12.5px;color:#94A3B8;line-height:1.55">Most of the help is gone. You pull the words back rather than recognize them — cloze at 50% and up.</div></div>
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-top:1px solid #24334c"><div style="font-family:'Space Mono',monospace;font-size:11px;color:#64748B;width:20px;flex-shrink:0;padding-top:2px">04</div><div style="width:88px;flex-shrink:0;font-size:13px;font-weight:700;color:#FBBF24">Produce</div><div style="flex:1;font-size:12.5px;color:#94A3B8;line-height:1.55">Nothing shown. You write or speak the section cold, start to end.</div></div>
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-top:1px solid #24334c"><div style="font-family:'Space Mono',monospace;font-size:11px;color:#64748B;width:20px;flex-shrink:0;padding-top:2px">05</div><div style="width:88px;flex-shrink:0;font-size:13px;font-weight:700;color:#F472B6">Perform</div><div style="flex:1;font-size:12.5px;color:#94A3B8;line-height:1.55">The whole piece, cold, at speed, and eventually for a live listener.</div></div>
+          <div style="margin-top:11px;padding-top:11px;border-top:1px solid #334155;font-size:12.5px;color:#94A3B8;line-height:1.6">The five grades are a <b style="color:#E2E8F0">spine, not a cage</b>. A grade can hold all four modalities. Consolidate exercises that are the same dial at different settings; separate ones that genuinely are not.</div>
+        </div>
+
+        <div style="background:#1E293B;border:1px solid #334155;border-radius:12px;padding:16px 18px">
+          <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:#64748B;font-weight:700;margin-bottom:9px">03 · Structure</div>
+          <div style="font-size:14px;font-weight:700;margin-bottom:9px;color:#F1F5F9">Core, support, and why the roadmap is a tree</div>
+          <div style="font-size:13px;color:#CBD5E1;line-height:1.65"><b style="color:#fff">Core</b> exercises are the must-pass spine: clear one and the next unlocks. <b style="color:#fff">Support</b> exercises hang off a core node as side-loops — a learner who stalls on cloze 50% drops into a speed-read lap and comes back. Support is optional by default, which is what turns a linear sequence into a branching roadmap.</div>
+          <div style="margin-top:11px;padding-top:11px;border-top:1px solid #334155;font-size:13px;color:#CBD5E1;line-height:1.65">A <b style="color:#fff">step</b> is a rotation of one scaffold across modalities — not a single drill. The first-letters step: <span style="color:#60A5FA;font-weight:600">read</span> it from the first letters, <span style="color:#34D399;font-weight:600">write</span> each line filling gaps with the letters as help, <span style="color:#F472B6;font-weight:600">speak</span> it from the same scaffold. One support, three channels. You clear the step by finishing its rotation.</div>
+          <div style="margin-top:11px;padding-top:11px;border-top:1px solid #334155;font-size:13px;color:#CBD5E1;line-height:1.65"><b style="color:#fff">Bridges</b> sit between steps. A bridge is a milestone the learner has to actually do — section the text, read the first-letters version aloud end to end — not a box they tick.</div>
+        </div>
+
+        <div style="background:#1E293B;border:1px solid #334155;border-radius:12px;padding:16px 18px">
+          <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:#64748B;font-weight:700;margin-bottom:9px">04 · Data</div>
+          <div style="font-size:14px;font-weight:700;margin-bottom:9px;color:#F1F5F9">Every property an exercise carries</div>
+          <div style="font-size:12.5px;color:#64748B;line-height:1.55;margin-bottom:4px">These are the fields the detail editor writes, and the same fields you can filter, sort, and lay the Matrix out by.</div>
+          <div style="display:flex;gap:12px;padding:7px 0;border-top:1px solid #24334c"><div style="width:104px;flex-shrink:0;font-family:'Space Mono',monospace;font-size:11.5px;color:#6EE7B7;padding-top:1px">name</div><div style="flex:1;font-size:12.5px;color:#94A3B8;line-height:1.55">What the learner sees. Free text.</div></div>
+          <div style="display:flex;gap:12px;padding:7px 0;border-top:1px solid #24334c"><div style="width:104px;flex-shrink:0;font-family:'Space Mono',monospace;font-size:11.5px;color:#6EE7B7;padding-top:1px">code</div><div style="flex:1;font-size:12.5px;color:#94A3B8;line-height:1.55">Auto-derived, e.g. <span style="color:#CBD5E1">3.1W</span> — step number, sub-step, modality letter. It follows level and order rather than being set directly.</div></div>
+          <div style="display:flex;gap:12px;padding:7px 0;border-top:1px solid #24334c"><div style="width:104px;flex-shrink:0;font-family:'Space Mono',monospace;font-size:11.5px;color:#6EE7B7;padding-top:1px">categories</div><div style="flex:1;font-size:12.5px;color:#94A3B8;line-height:1.55">The modality channel: Reading · Listening · Writing · Speaking. Drives node colour everywhere.</div></div>
+          <div style="display:flex;gap:12px;padding:7px 0;border-top:1px solid #24334c"><div style="width:104px;flex-shrink:0;font-family:'Space Mono',monospace;font-size:11.5px;color:#6EE7B7;padding-top:1px">level</div><div style="flex:1;font-size:12.5px;color:#94A3B8;line-height:1.55">Which of the five grades it sits at. Sets its band in the Roadmap and its row in the Matrix.</div></div>
+          <div style="display:flex;gap:12px;padding:7px 0;border-top:1px solid #24334c"><div style="width:104px;flex-shrink:0;font-family:'Space Mono',monospace;font-size:11.5px;color:#6EE7B7;padding-top:1px">kind</div><div style="flex:1;font-size:12.5px;color:#94A3B8;line-height:1.55"><b style="color:#CBD5E1">core</b> (must-pass spine) or <b style="color:#CBD5E1">support</b> (optional side-loop).</div></div>
+          <div style="display:flex;gap:12px;padding:7px 0;border-top:1px solid #24334c"><div style="width:104px;flex-shrink:0;font-family:'Space Mono',monospace;font-size:11.5px;color:#6EE7B7;padding-top:1px">family</div><div style="flex:1;font-size:12.5px;color:#94A3B8;line-height:1.55">The tool it belongs to — Cloze, Speed-read, First-letters, Perform. One family recurs across levels at rising difficulty; families are candidates to merge into a single parametric exercise.</div></div>
+          <div style="display:flex;gap:12px;padding:7px 0;border-top:1px solid #24334c"><div style="width:104px;flex-shrink:0;font-family:'Space Mono',monospace;font-size:11.5px;color:#6EE7B7;padding-top:1px">support</div><div style="flex:1;font-size:12.5px;color:#94A3B8;line-height:1.55">0–100. How much text is shown. 100 = full text, 0 = nothing. The scaffold dial; also drives the scaffold band used by filters, sorting and the Matrix.</div></div>
+          <div style="display:flex;gap:12px;padding:7px 0;border-top:1px solid #24334c"><div style="width:104px;flex-shrink:0;font-family:'Space Mono',monospace;font-size:11.5px;color:#6EE7B7;padding-top:1px">demand</div><div style="flex:1;font-size:12.5px;color:#94A3B8;line-height:1.55">0–100. Take-in → perform. Roughly how far along the climb the exercise sits inside its level.</div></div>
+          <div style="display:flex;gap:12px;padding:7px 0;border-top:1px solid #24334c"><div style="width:104px;flex-shrink:0;font-family:'Space Mono',monospace;font-size:11.5px;color:#6EE7B7;padding-top:1px">graded</div><div style="flex:1;font-size:12.5px;color:#94A3B8;line-height:1.55">Whether the run produces a score the engine can act on, or is just exposure.</div></div>
+          <div style="display:flex;gap:12px;padding:7px 0;border-top:1px solid #24334c"><div style="width:104px;flex-shrink:0;font-family:'Space Mono',monospace;font-size:11.5px;color:#6EE7B7;padding-top:1px">cp</div><div style="flex:1;font-size:12.5px;color:#94A3B8;line-height:1.55">Checkpoint: <b style="color:#CBD5E1">none</b> (flows straight through), <b style="color:#CBD5E1">self</b> (learner marks it done), <b style="color:#CBD5E1">hard</b> (gate — nothing past it unlocks until it is passed).</div></div>
+          <div style="display:flex;gap:12px;padding:7px 0;border-top:1px solid #24334c"><div style="width:104px;flex-shrink:0;font-family:'Space Mono',monospace;font-size:11.5px;color:#6EE7B7;padding-top:1px">active</div><div style="flex:1;font-size:12.5px;color:#94A3B8;line-height:1.55">On/off. Off keeps the exercise here but hides it from the prototype and draws it dashed in every Lab view. This is the only visibility switch — there is no separate draft state.</div></div>
+          <div style="display:flex;gap:12px;padding:7px 0;border-top:1px solid #24334c"><div style="width:104px;flex-shrink:0;font-family:'Space Mono',monospace;font-size:11.5px;color:#6EE7B7;padding-top:1px">spec</div><div style="flex:1;font-size:12.5px;color:#94A3B8;line-height:1.55">One line: what the learner actually does. Written for a builder, not for marketing.</div></div>
+          <div style="display:flex;gap:12px;padding:7px 0;border-top:1px solid #24334c"><div style="width:104px;flex-shrink:0;font-family:'Space Mono',monospace;font-size:11.5px;color:#6EE7B7;padding-top:1px">notes</div><div style="flex:1;font-size:12.5px;color:#94A3B8;line-height:1.55">Anything else — open questions, why it exists, what it might merge into.</div></div>
+          <div style="display:flex;gap:12px;padding:7px 0;border-top:1px solid #24334c"><div style="width:104px;flex-shrink:0;font-family:'Space Mono',monospace;font-size:11.5px;color:#6EE7B7;padding-top:1px">mods</div><div style="flex:1;font-size:12.5px;color:#94A3B8;line-height:1.55">Steps only. Which modalities the rotation covers.</div></div>
+        </div>
+
+        <div style="background:#1E293B;border:1px solid #334155;border-radius:12px;padding:16px 18px">
+          <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:#64748B;font-weight:700;margin-bottom:9px">05 · Using the Lab</div>
+          <div style="font-size:14px;font-weight:700;margin-bottom:9px;color:#F1F5F9">What each view is for</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div><div style="font-size:12.5px;font-weight:700;color:#6EE7B7;margin-bottom:3px">Roadmap — the default view</div><div style="font-size:12.5px;color:#94A3B8;line-height:1.6">The climb as a tree. The core spine runs down the middle; support loops branch off it. The left column carries the prose for each step and the bridge out of it; the right column shows what a learner can freely pick at a chosen floor. Drag a node sideways to change its sub-step order, or across a band to re-level it. <span style="color:#64748B">Use it to think about sequence.</span></div></div>
+            <div><div style="font-size:12.5px;font-weight:700;color:#6EE7B7;margin-bottom:3px">Table</div><div style="font-size:12.5px;color:#94A3B8;line-height:1.6">Every exercise as an editable card. Filter by any property, sort by any property, edit inline, add new ones. <span style="color:#64748B">Use it to audit and bulk-edit.</span></div></div>
+            <div><div style="font-size:12.5px;font-weight:700;color:#6EE7B7;margin-bottom:3px">Matrix</div><div style="font-size:12.5px;color:#94A3B8;line-height:1.6">A cross-tab of the set. Pick any property for columns and any for rows — category × level is the default, but family × scaffold or core/support × level answer different questions. Empty cells are the interesting part: they are gaps in coverage. Drag a chip into another cell to reassign it. <span style="color:#64748B">Use it to find holes.</span></div></div>
+            <div><div style="font-size:12.5px;font-weight:700;color:#6EE7B7;margin-bottom:3px">Detail editor</div><div style="font-size:12.5px;color:#94A3B8;line-height:1.6">Click any node in any view to open it. Same panel everywhere: all properties, an on/off toggle, Practice, and Delete with a confirm. <span style="color:#64748B">Find in Matrix / Roadmap jumps to the same node in another view.</span></div></div>
+            <div><div style="font-size:12.5px;font-weight:700;color:#6EE7B7;margin-bottom:3px">Sample text and Simulate</div><div style="font-size:12.5px;color:#94A3B8;line-height:1.6">The passage at the top drives every run. Practice on one exercise runs it against that text; Simulate walks the whole ladder start to finish, so you can feel the sequence rather than read it.</div></div>
+          </div>
+        </div>
+
+        <div style="background:#1E293B;border:1px solid #334155;border-radius:12px;padding:16px 18px">
+          <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:#64748B;font-weight:700;margin-bottom:9px">06 · Using the prototype</div>
+          <div style="font-size:14px;font-weight:700;margin-bottom:9px;color:#F1F5F9">What a first-time learner does</div>
+          <div style="display:flex;flex-direction:column;gap:9px">
+            <div style="display:flex;gap:11px"><div style="font-family:'Space Mono',monospace;font-size:11px;color:#64748B;width:18px;flex-shrink:0;padding-top:2px">1</div><div style="font-size:12.5px;color:#94A3B8;line-height:1.6">Open the library and add a piece — paste the text you want to memorize.</div></div>
+            <div style="display:flex;gap:11px"><div style="font-family:'Space Mono',monospace;font-size:11px;color:#64748B;width:18px;flex-shrink:0;padding-top:2px">2</div><div style="font-size:12.5px;color:#94A3B8;line-height:1.6">Break it into sections. Sections are the unit of practice; the whole piece comes later.</div></div>
+            <div style="display:flex;gap:11px"><div style="font-family:'Space Mono',monospace;font-size:11px;color:#64748B;width:18px;flex-shrink:0;padding-top:2px">3</div><div style="font-size:12.5px;color:#94A3B8;line-height:1.6">Climb. Each floor shows what is unlocked, what is cleared, and what is still locked. Pick freely from what is open — the order inside a floor is yours.</div></div>
+            <div style="display:flex;gap:11px"><div style="font-family:'Space Mono',monospace;font-size:11px;color:#64748B;width:18px;flex-shrink:0;padding-top:2px">4</div><div style="font-size:12.5px;color:#94A3B8;line-height:1.6">Cross a bridge to reach the next floor. Bridges are the one thing that cannot be skipped.</div></div>
+            <div style="display:flex;gap:11px"><div style="font-family:'Space Mono',monospace;font-size:11px;color:#64748B;width:18px;flex-shrink:0;padding-top:2px">5</div><div style="font-size:12.5px;color:#94A3B8;line-height:1.6">The Roadmap tab in the app is the same tree as the one in the Lab. It is where you see how far along the whole piece is, not just the section in front of you.</div></div>
+          </div>
+          <div style="margin-top:12px;padding-top:11px;border-top:1px solid #334155;font-size:12.5px;color:#64748B;line-height:1.6">Exercises switched off in the Lab simply do not appear in the app. That is how the set gets trialled.</div>
+        </div>
+
+        <div style="background:#1E293B;border:1px solid #334155;border-radius:12px;padding:16px 18px">
+          <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:#64748B;font-weight:700;margin-bottom:9px">07 · The engine</div>
+          <div style="font-size:14px;font-weight:700;margin-bottom:9px;color:#F1F5F9">Coupling and refresh</div>
+          <div style="font-size:13px;color:#CBD5E1;line-height:1.65"><b style="color:#fff">Floor</b> = the weakest section's grade. The <b style="color:#fff">whole text</b> is only ever offered at or just below the floor — so the only way to climb the whole is to pull up the laggard section. Cleared exercises <b style="color:#fff">return as refreshers</b> (a Read lap before a hard Recall), tracked by a <b style="color:#fff">rising metric</b> like wpm — exposure that primes the next rung, not busywork. <b style="color:#E2E8F0">Takeover:</b> once the floor reaches Produce, the whole becomes primary and sections become its repair shop.</div>
+          <div style="margin-top:11px;padding-top:11px;border-top:1px solid #334155;font-size:12.5px;color:#64748B;line-height:1.6">This is the largest piece not yet built. The exercise set and the roadmap are in place; the scheduling logic that couples section progress to whole-piece progress is still to come.</div>
+        </div>
+
+        <div style="background:#1E293B;border:1px solid #334155;border-radius:12px;padding:16px 18px">
+          <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:#64748B;font-weight:700;margin-bottom:9px">08 · Files</div>
+          <div style="font-size:14px;font-weight:700;margin-bottom:9px;color:#F1F5F9">Where everything lives</div>
+          <div style="display:flex;gap:12px;padding:7px 0;border-top:1px solid #24334c"><div style="width:104px;flex-shrink:0;font-family:'Space Mono',monospace;font-size:11.5px;color:#6EE7B7;padding-top:1px">exercises-data.js</div><div style="flex:1;font-size:12.5px;color:#94A3B8;line-height:1.55">The single source of truth: levels, step prose, bridges, and the full exercise set. Both surfaces read it. Change the model here.</div></div>
+          <div style="display:flex;gap:12px;padding:7px 0;border-top:1px solid #24334c"><div style="width:104px;flex-shrink:0;font-family:'Space Mono',monospace;font-size:11.5px;color:#6EE7B7;padding-top:1px">Exercise Lab</div><div style="flex:1;font-size:12.5px;color:#94A3B8;line-height:1.55">This tool. Roadmap, Table, Matrix, and the detail editor. Writes back to the shared store.</div></div>
+          <div style="display:flex;gap:12px;padding:7px 0;border-top:1px solid #24334c"><div style="width:104px;flex-shrink:0;font-family:'Space Mono',monospace;font-size:11.5px;color:#6EE7B7;padding-top:1px">Memoria</div><div style="flex:1;font-size:12.5px;color:#94A3B8;line-height:1.55">The learner-facing prototype. Reads the same set; never hard-codes exercises.</div></div>
+          <div style="display:flex;gap:12px;padding:7px 0;border-top:1px solid #24334c"><div style="width:104px;flex-shrink:0;font-family:'Space Mono',monospace;font-size:11.5px;color:#6EE7B7;padding-top:1px">support.js</div><div style="flex:1;font-size:12.5px;color:#94A3B8;line-height:1.55">Shared helpers — tree building, family traces, code parsing, reorder logic — so the two roadmaps cannot drift apart.</div></div>
+          <div style="margin-top:11px;padding-top:11px;border-top:1px solid #334155;font-size:12.5px;color:#64748B;line-height:1.6">Both surfaces persist to local storage, so edits survive a reload. If the question is what exercises exist, in what order, and why, it is a data change. If it is how something looks or feels, it is a view change.</div>
+        </div>
+
+        <div style="background:#0F172A;border:1px solid #334155;border-radius:12px;padding:16px 18px">
+          <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:#64748B;font-weight:700;margin-bottom:9px">09 · Glossary</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:9px 18px">
+            <div style="font-size:12.5px;color:#94A3B8;line-height:1.5"><b style="color:#E2E8F0">grade</b> — rung of cognitive demand</div>
+            <div style="font-size:12.5px;color:#94A3B8;line-height:1.5"><b style="color:#E2E8F0">modality</b> — read / write / speak / listen</div>
+            <div style="font-size:12.5px;color:#94A3B8;line-height:1.5"><b style="color:#E2E8F0">scaffold</b> — how much text is shown</div>
+            <div style="font-size:12.5px;color:#94A3B8;line-height:1.5"><b style="color:#E2E8F0">core</b> — must-pass node on the spine</div>
+            <div style="font-size:12.5px;color:#94A3B8;line-height:1.5"><b style="color:#E2E8F0">support</b> — optional side-loop off a core node</div>
+            <div style="font-size:12.5px;color:#94A3B8;line-height:1.5"><b style="color:#E2E8F0">family</b> — one tool recurring at rising difficulty</div>
+            <div style="font-size:12.5px;color:#94A3B8;line-height:1.5"><b style="color:#E2E8F0">parametric exercise</b> — one exercise across a scaffold band</div>
+            <div style="font-size:12.5px;color:#94A3B8;line-height:1.5"><b style="color:#E2E8F0">step</b> — a modality rotation at one scaffold</div>
+            <div style="font-size:12.5px;color:#94A3B8;line-height:1.5"><b style="color:#E2E8F0">bridge</b> — the milestone between two steps</div>
+            <div style="font-size:12.5px;color:#94A3B8;line-height:1.5"><b style="color:#E2E8F0">checkpoint</b> — none, self-marked, or a hard gate</div>
+            <div style="font-size:12.5px;color:#94A3B8;line-height:1.5"><b style="color:#E2E8F0">floor</b> — the weakest section grade</div>
+            <div style="font-size:12.5px;color:#94A3B8;line-height:1.5"><b style="color:#E2E8F0">coupling</b> — whole tracks the floor</div>
+            <div style="font-size:12.5px;color:#94A3B8;line-height:1.5"><b style="color:#E2E8F0">refresher</b> — cleared exercise returning to prime a harder one</div>
+            <div style="font-size:12.5px;color:#94A3B8;line-height:1.5"><b style="color:#E2E8F0">takeover</b> — whole becomes primary at Produce</div>
+          </div>
+        </div>
+
+        <div style="background:#1E293B;border:1px solid #334155;border-radius:12px;padding:16px 18px">
+          <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:#64748B;font-weight:700;margin-bottom:9px">10 · Where it stands</div>
+          <div style="display:flex;gap:22px;flex-wrap:wrap">
+            <div style="flex:1;min-width:230px">
+              <div style="font-size:12px;font-weight:700;color:#6EE7B7;margin-bottom:7px">Built</div>
+              <div style="font-size:12.5px;color:#94A3B8;line-height:1.7">One source of truth, read by both surfaces<br>Five-level spine and dotted sub-step codes<br>Core / support split, roadmap as a real tree<br>Roadmap, Table, Matrix with any-property axes<br>Shared detail editor with on/off, practice, delete</div>
+            </div>
+            <div style="flex:1;min-width:230px">
+              <div style="font-size:12px;font-weight:700;color:#FBBF24;margin-bottom:7px">Next</div>
+              <div style="font-size:12.5px;color:#94A3B8;line-height:1.7">Bridge prose and exercise mix for the top two steps<br>The section ↔ whole coupling engine<br>Learner progress state and checkpoint gating</div>
+            </div>
+          </div>
+          <div style="margin-top:13px;padding-top:11px;border-top:1px solid #334155">
+            <div style="font-size:12px;font-weight:700;color:#94A3B8;margin-bottom:7px">Open questions</div>
+            <div style="font-size:12.5px;color:#64748B;line-height:1.7">Does a support loop ever gate progress, or is it always optional?<br>What metric drives the refresher schedule — time, accuracy, or both?<br>When audio lands, do hear-it, shadow and dictation switch on as a group?</div>
+          </div>
+        </div>
+
+      </div>
+    </sc-if>
+
+
+  </div>
+
+  <main style="max-width:1180px;margin:0 auto;padding:8px 28px 80px">
+
+    <!-- sample text — drives every run -->
+    <div style="background:#13203A;border:1px solid #334155;border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">
+      <div style="flex-shrink:0;display:flex;flex-direction:column;gap:9px;width:152px">
+        <div>
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6EE7B7">Sample text</div>
+          <div style="font-size:10.5px;color:#64748B;margin-top:3px">Drives every Practice run.</div>
+        </div>
+        <button onClick="{{ onPracticeAll }}" title="Run every exercise Meet → Perform on the sample text" style="background:#15243B;border:1px solid #2F5D4A;color:#6EE7B7;border-radius:8px;padding:7px 11px;font-size:12.5px;font-weight:600;text-align:left;line-height:1.35">▶ Simulate<br>start → finish</button>
+      </div>
+      <textarea value="{{ sampleText }}" onChange="{{ onSampleText }}" placeholder="Paste a passage to simulate exercises on…" style="flex: 1; min-width: 260px; min-height: 74px; resize: vertical; background: #0F172A; border: 1px solid #334155; border-radius: 8px; color: #CBD5E1; font-size: 13px; line-height: 1.6; padding: 9px 11px; width: 932px; height: 94px"></textarea>
+    </div>
+
+    <!-- unified view switcher -->
+    <div style="margin-bottom:14px">
+      <div style="display:inline-flex;gap:4px;background:#1E293B;border:1px solid #334155;border-radius:11px;padding:4px">
+        <sc-for list="{{ navItems }}" as="nv" hint-placeholder-count="5"><button onClick="{{ nv.onClick }}" style="{{ nv.style }}">{{ nv.label }}</button></sc-for>
+      </div>
+    </div>
+
+    <!-- filters (data views only) -->
+    <sc-if value="{{ isDataView }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+        <span style="font-size:12px;color:#64748B;font-weight:600">Filter</span>
+        <select value="{{ filterCat }}" onChange="{{ onFilterCat }}" style="background:#1E293B;border:1px solid #334155;color:#F1F5F9;border-radius:8px;padding:6px 10px;font-size:13px">
+          <sc-for list="{{ catFilterOpts }}" as="o" hint-placeholder-count="5"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+        </select>
+        <select value="{{ filterLevel }}" onChange="{{ onFilterLevel }}" style="background:#1E293B;border:1px solid #334155;color:#F1F5F9;border-radius:8px;padding:6px 10px;font-size:13px">
+          <sc-for list="{{ levelFilterOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+        </select>
+        <select value="{{ filterCap }}" onChange="{{ onFilterCap }}" style="background:#1E293B;border:1px solid #334155;color:#F1F5F9;border-radius:8px;padding:6px 10px;font-size:13px">
+          <sc-for list="{{ capFilterOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+        </select>
+        <select value="{{ filterFamily }}" onChange="{{ onFilterFamily }}" style="background:#1E293B;border:1px solid #334155;color:#F1F5F9;border-radius:8px;padding:6px 10px;font-size:13px">
+          <sc-for list="{{ familyFilterOpts }}" as="o" hint-placeholder-count="8"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+        </select>
+        <select value="{{ filterKind }}" onChange="{{ onFilterKind }}" style="background:#1E293B;border:1px solid #334155;color:#F1F5F9;border-radius:8px;padding:6px 10px;font-size:13px">
+          <sc-for list="{{ kindFilterOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+        </select>
+        <select value="{{ filterGraded }}" onChange="{{ onFilterGraded }}" style="background:#1E293B;border:1px solid #334155;color:#F1F5F9;border-radius:8px;padding:6px 10px;font-size:13px">
+          <sc-for list="{{ gradedFilterOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+        </select>
+        <select value="{{ filterCp }}" onChange="{{ onFilterCp }}" style="background:#1E293B;border:1px solid #334155;color:#F1F5F9;border-radius:8px;padding:6px 10px;font-size:13px">
+          <sc-for list="{{ cpFilterOpts }}" as="o" hint-placeholder-count="4"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+        </select>
+        <select value="{{ filterScaffold }}" onChange="{{ onFilterScaffold }}" style="background:#1E293B;border:1px solid #334155;color:#F1F5F9;border-radius:8px;padding:6px 10px;font-size:13px">
+          <sc-for list="{{ scaffoldFilterOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+        </select>
+        <button onClick="{{ onClearFilters }}" style="font-size:12px;color:#94A3B8;border:1px solid #334155;border-radius:8px;padding:6px 11px" style-hover="border-color:#475569;color:#CBD5E1">Reset</button>
+      </div>
+    </sc-if>
+
+    <!-- ════ TABLE ════ -->
+    <sc-if value="{{ isTable }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+          <sc-if value="{{ invTable }}" hint-placeholder-val="{{ true }}">
+            <span style="font-size:12px;color:#64748B;font-weight:600">Sort</span>
+            <select value="{{ sortBy }}" onChange="{{ onSortBy }}" style="background:#1E293B;border:1px solid #334155;color:#F1F5F9;border-radius:8px;padding:6px 10px;font-size:13px">
+              <sc-for list="{{ sortOpts }}" as="o" hint-placeholder-count="5"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+            </select>
+          </sc-if>
+          <div style="flex:1"></div>
+          <button onClick="{{ onAdd }}" style="background:#15243B;border:1px solid #2F5D4A;color:#6EE7B7;border-radius:8px;padding:7px 13px;font-size:13px;font-weight:600">+ New exercise</button>
+        </div>
+
+        <sc-if value="{{ invTable }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ inventory }}" as="row" hint-placeholder-count="6">
+            <div style="{{ row.cardStyle }}">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:11px">
+                <div style="{{ row.dotStyle }}"></div>
+                <input value="{{ row.code }}" onChange="{{ row.onCode }}" title="Edit the code to move it — first digit = step/level, last digit = order (e.g. 3W1)" style="width:56px;text-align:center;font-family:'Space Mono',monospace;font-size:11px;color:#CBD5E1;background:#0F172A;border:1px solid #334155;border-radius:5px;padding:3px 5px;flex-shrink:0" style-focus="border-color:#6EE7B7;color:#6EE7B7">
+                <input value="{{ row.name }}" onChange="{{ row.onName }}" style="flex:1;background:transparent;border:none;color:#F1F5F9;font-size:15px;font-weight:600;padding:2px 0;border-bottom:1px solid transparent" style-focus="border-bottom:1px solid #475569">
+                <button onClick="{{ row.onToggleActive }}" title="Include in the current roadmap (consumed by the prototype). Off = kept here but greyed out everywhere." style="{{ row.activeStyle }}">{{ row.activeLabel }}</button>
+                <sc-if value="{{ row.isStep }}" hint-placeholder-val="{{ false }}"><span style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#93C5FD;border:1px solid #2F4A63;background:#13203A;border-radius:5px;padding:2px 7px;font-weight:700;flex-shrink:0">step</span></sc-if>
+                <button onClick="{{ row.onPractice }}" title="Simulate on sample text" style="background:#15243B;border:1px solid #2F5D4A;color:#6EE7B7;border-radius:7px;padding:4px 11px;font-size:12px;font-weight:600;flex-shrink:0">{{ row.practiceLabel }}</button>
+                <button onClick="{{ row.onDel }}" title="Delete" style="color:#64748B;font-size:18px;line-height:1;padding:2px 6px;border-radius:6px">×</button>
+              </div>
+
+              <sc-if value="{{ row.isNotStep }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+                  <sc-for list="{{ row.catState }}" as="cat" hint-placeholder-count="4">
+                    <button onClick="{{ cat.onClick }}" style="{{ cat.chipStyle }}">{{ cat.c }}</button>
+                  </sc-for>
+                  <div style="flex:1"></div>
+                  <button onClick="{{ row.onFamily }}" title="Highlight this family across views" style="{{ row.famChipStyle }}">⧉ {{ row.family }}</button>
+                </div>
+              </sc-if>
+              <sc-if value="{{ row.isStep }}" hint-placeholder-val="{{ false }}">
+                <div style="background:#13203A;border:1px solid #2F4A63;border-radius:9px;padding:10px 12px;margin-bottom:10px">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;flex-wrap:wrap">
+                    <span style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#93C5FD;font-weight:700">Modality rotation</span>
+                    <span style="font-size:11px;color:#CBD5E1;font-family:'Space Mono',monospace">{{ row.rotationText }}</span>
+                    <span style="font-size:10.5px;color:#64748B">· clear by finishing · scaffold = {{ row.scaffoldBandLabel }}</span>
+                  </div>
+                  <div style="display:flex;gap:7px;flex-wrap:wrap">
+                    <sc-for list="{{ row.modState }}" as="md" hint-placeholder-count="4">
+                      <button onClick="{{ md.onClick }}" style="{{ md.chipStyle }}"><span style="{{ md.letterStyle }}">{{ md.letter }}</span><span style="{{ md.nameStyle }}">{{ md.mechName }}</span></button>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-if>
+
+              <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-bottom:11px">
+                <div style="display:flex;gap:2px;background:#0F172A;border:1px solid #334155;border-radius:8px;padding:2px">
+                  <sc-for list="{{ row.levelState }}" as="lv" hint-placeholder-count="5"><button onClick="{{ lv.onClick }}" style="{{ lv.style }}">{{ lv.l }}</button></sc-for>
+                </div>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <span style="font-size:11px;color:#64748B">grading</span>
+                  <button onClick="{{ row.onCap }}" style="{{ row.capStyle }}">{{ row.capLabel }}</button>
+                </div>
+                <div style="display:flex;gap:2px;background:#0F172A;border:1px solid #334155;border-radius:8px;padding:2px">
+                  <span style="font-size:11px;color:#64748B;padding:5px 6px 5px 8px">checkpoint</span>
+                  <sc-for list="{{ row.cpState }}" as="cp" hint-placeholder-count="3"><button onClick="{{ cp.onClick }}" style="{{ cp.style }}">{{ cp.c }}</button></sc-for>
+                </div>
+                <div style="flex:1"></div>
+                <div style="display:flex;gap:5px;align-items:center">
+                  <span style="font-size:10.5px;color:#475569">find in</span>
+                  <button onClick="{{ row.onFindMatrix }}" style="font-size:11px;color:#94A3B8;border:1px solid #334155;border-radius:6px;padding:4px 9px" style-hover="border-color:#475569;color:#CBD5E1">Matrix</button>
+                  <button onClick="{{ row.onFindRoadmap }}" style="font-size:11px;color:#94A3B8;border:1px solid #334155;border-radius:6px;padding:4px 9px" style-hover="border-color:#475569;color:#CBD5E1">Roadmap</button>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:22px;flex-wrap:wrap;margin-bottom:11px">
+                <label style="display:flex;flex-direction:column;gap:5px;flex:1;min-width:190px">
+                  <span style="font-size:11px;color:#94A3B8">support — text shown <span style="font-family:'Space Mono',monospace;color:#CBD5E1">{{ row.supportLabel }}</span></span>
+                  <input type="range" min="0" max="100" value="{{ row.support }}" onInput="{{ row.onSupport }}" style="width:100%">
+                </label>
+                <label style="display:flex;flex-direction:column;gap:5px;flex:1;min-width:190px">
+                  <span style="font-size:11px;color:#94A3B8">demand — take-in→perform <span style="font-family:'Space Mono',monospace;color:#CBD5E1">{{ row.demandLabel }}</span></span>
+                  <input type="range" min="0" max="100" value="{{ row.demand }}" onInput="{{ row.onDemand }}" style="width:100%">
+                </label>
+              </div>
+
+              <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <input value="{{ row.spec }}" onChange="{{ row.onSpec }}" placeholder="spec — what the learner does" style="flex:2;min-width:240px;background:#0F172A;border:1px solid #334155;border-radius:7px;color:#CBD5E1;font-size:12.5px;padding:7px 10px">
+                <input value="{{ row.notes }}" onChange="{{ row.onNotes }}" placeholder="notes" style="flex:1;min-width:160px;background:#0F172A;border:1px solid #334155;border-radius:7px;color:#94A3B8;font-size:12.5px;padding:7px 10px">
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ invFamily }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:12px;color:#64748B;margin-bottom:12px">One family = one tool rising in scaffold across the steps. Tap an instance to open it.</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ familyTree }}" as="ft" hint-placeholder-count="8">
+              <div style="background:#13203A;border:1px solid #334155;border-radius:11px;padding:13px 15px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+                <div style="min-width:150px;display:flex;flex-direction:column;gap:3px">
+                  <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:{{ ft.color }}"></span><span style="font-weight:700;color:#F1F5F9;font-size:14px">{{ ft.name }}</span></div>
+                  <div style="font-size:11px;color:#64748B">×{{ ft.count }} · {{ ft.span }}</div>
+                </div>
+                <div style="flex:1;display:flex;align-items:stretch;gap:9px;flex-wrap:wrap;min-width:0">
+                  <sc-for list="{{ ft.items }}" as="it" hint-placeholder-count="3">
+                    <div onClick="{{ it.onClick }}" style="{{ it.chipStyle }}">
+                      <span style="font-family:'Space Mono',monospace;font-size:11px;color:#94A3B8">{{ it.code }}</span>
+                      <span style="font-size:12.5px;color:#E2E8F0;font-weight:600">{{ it.name }}</span>
+                      <span style="font-size:10px;color:#64748B">{{ it.stepLabel }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- ════ MATRIX (inventory sub-view) ════ -->
+    <sc-if value="{{ invMatrix }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+          <span style="font-size:12px;color:#64748B;font-weight:600">Columns</span>
+          <select value="{{ mxAxis }}" onChange="{{ onMxAxis }}" style="background:#1E293B;border:1px solid #334155;color:#F1F5F9;border-radius:8px;padding:6px 10px;font-size:13px">
+            <sc-for list="{{ axisOpts }}" as="o" hint-placeholder-count="8"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+          </select>
+          <span style="font-size:12px;color:#64748B;font-weight:600">Rows</span>
+          <select value="{{ myAxis }}" onChange="{{ onMyAxis }}" style="background:#1E293B;border:1px solid #334155;color:#F1F5F9;border-radius:8px;padding:6px 10px;font-size:13px">
+            <sc-for list="{{ axisOpts }}" as="o" hint-placeholder-count="8"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+          </select>
+          <button onClick="{{ onSwapAxes }}" title="Swap axes" style="font-size:12px;color:#94A3B8;border:1px solid #334155;border-radius:8px;padding:6px 11px" style-hover="border-color:#475569;color:#CBD5E1">⇄ swap</button>
+          <span style="font-size:12px;color:#475569">drag a chip to another cell to reassign or reorder</span>
+        </div>
+        <div style="display:flex;margin-bottom:8px">
+          <div style="width:108px;flex-shrink:0"></div>
+          <div style="{{ mxHeadGrid }}">
+            <sc-for list="{{ matrixCols }}" as="col" hint-placeholder-count="4">
+              <div style="{{ col.headStyle }}">
+                <span style="width:8px;height:8px;border-radius:50%;background:{{ col.color }};display:inline-block;margin-right:7px"></span>{{ col.cat }}
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0">
+          <sc-for list="{{ stripes }}" as="st" hint-placeholder-count="9">
+            <sc-if value="{{ st.isLevel }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;align-items:stretch;gap:0">
+                <div style="width:108px;flex-shrink:0;display:flex;flex-direction:column;justify-content:center;padding:14px 0">
+                  <div style="font-size:13px;font-weight:600;color:#F1F5F9">{{ st.level }}</div>
+                  <div style="font-size:10px;color:#64748B;font-family:'Space Mono',monospace">{{ st.rung }}</div>
+                </div>
+                <div style="{{ mxRowGrid }}">
+                  <sc-for list="{{ st.cells }}" as="cell" hint-placeholder-count="4">
+                    <div style="{{ cell.wrapStyle }}" onDragOver="{{ cell.onDragOver }}" onDrop="{{ cell.onDrop }}">
+                      <sc-for list="{{ cell.exs }}" as="ex" hint-placeholder-count="1">
+                        <div onClick="{{ ex.onClick }}" draggable="{{ ex.draggable }}" onDragStart="{{ ex.onDragStart }}" onDragOver="{{ ex.onDragOver }}" onDrop="{{ ex.onDrop }}" style="{{ ex.chipStyle }}">
+                          <span style="font-family:'Space Mono',monospace;color:#64748B;font-size:10px;flex-shrink:0">{{ ex.code }}</span>
+                          <span style="flex:1">{{ ex.name }}</span>
+                          <sc-if value="{{ ex.isStep }}" hint-placeholder-val="{{ false }}"><span style="font-family:'Space Mono',monospace;font-size:9.5px;color:#93C5FD;background:#13203A;border:1px solid #2F4A63;border-radius:4px;padding:1px 5px;flex-shrink:0">{{ ex.rot }}</span></sc-if>
+                          <sc-if value="{{ ex.cpHard }}" hint-placeholder-val="{{ false }}"><span style="color:#FBBF24">●</span></sc-if>
+                          <sc-if value="{{ ex.cpSelf }}" hint-placeholder-val="{{ false }}"><span style="color:#94A3B8">◇</span></sc-if>
+                        </div>
+                      </sc-for>
+                      <sc-if value="{{ cell.empty }}" hint-placeholder-val="{{ false }}"><div style="color:#334155;font-size:18px;text-align:center;padding:6px">·</div></sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ st.isCp }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;gap:0;margin:2px 0">
+                <div style="width:108px;flex-shrink:0;text-align:right;padding-right:14px;font-size:10px;color:#64748B;text-transform:uppercase;letter-spacing:.06em">{{ st.cpLabel }}</div>
+                <div style="{{ st.cpBandStyle }}">
+                  <sc-if value="{{ st.cpHasMarks }}" hint-placeholder-val="{{ true }}">
+                    <sc-for list="{{ st.marks }}" as="m" hint-placeholder-count="1"><span style="display:inline-flex;align-items:center;gap:6px;color:#FBBF24;font-size:12px;font-weight:600"><span>●</span>{{ m.name }}</span></sc-for>
+                  </sc-if>
+                  <sc-if value="{{ st.cpSoft }}" hint-placeholder-val="{{ false }}"><span style="color:#475569;font-size:11px">◇ self-mark to advance</span></sc-if>
+                </div>
+              </div>
+            </sc-if>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ════ ROADMAP ════ -->
+    <sc-if value="{{ isRoadmapV }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+          <div style="font-size:12px;color:#64748B;flex:1;min-width:200px">{{ roadBlurb }}</div>
+        </div>
+
+        <div style="display:flex;gap:14px">
+          <div style="position:relative;width:250px;flex-shrink:0;height:1280px">
+            <sc-for list="{{ roadSteps }}" as="b" hint-placeholder-count="6">
+              <div style="position:absolute;left:0;right:0;top:{{ b.topPct }};transform:translateY(-50%);padding-right:14px">
+                <div style="display:flex;align-items:baseline;gap:7px;flex-wrap:wrap">
+                  <span style="font-size:9px;color:#64748B;font-family:'Space Mono',monospace;letter-spacing:.08em">STEP {{ b.num }}</span>
+                  <span style="font-size:14px;font-weight:700;color:{{ b.accent }}">{{ b.level }}</span>
+                </div>
+                <div style="font-size:11px;line-height:1.5;color:#94A3B8;margin-top:5px;text-wrap:pretty">{{ b.intro }}</div>
+                <sc-if value="{{ b.hasBridge }}" hint-placeholder-val="{{ false }}">
+                  <div style="margin-top:7px;font-size:10.5px;line-height:1.5;color:#94A3B8;border-left:2px solid #2F5D4A;padding-left:8px"><span style="color:#6EE7B7;font-weight:700">Bridge ↓ </span>{{ b.bridge }}</div>
+                </sc-if>
+                <sc-if value="{{ b.canAdd }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ b.onAdd }}" title="Add an exercise as a new sub-step at this step" style="margin-top:8px;font-size:10px;color:#6EE7B7;border:1px solid #2F5D4A;background:#15243B;border-radius:6px;padding:2px 8px;white-space:nowrap">+ add exercise</button>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div onDragOver="{{ onRoadOver }}" onDrop="{{ onRoadDrop }}" style="position:relative;height:1280px;background:#13203A;border:1px solid #334155;border-radius:12px;overflow:hidden">
+              <sc-for list="{{ roadSteps }}" as="b" hint-placeholder-count="6">
+                <div style="position:absolute;left:0;right:0;top:{{ b.topPct }};height:1px;background:#1e2d49"></div>
+              </sc-for>
+              <sc-for list="{{ roadBridges }}" as="br" hint-placeholder-count="5">
+                <div style="position:absolute;left:50%;top:{{ br.y }};transform:translate(-50%,-50%);z-index:4;background:#0B1322;border:1px solid #2F5D4A;border-radius:999px;padding:3px 12px;font-size:10px;color:#6EE7B7;white-space:nowrap;pointer-events:none;max-width:92%;overflow:hidden;text-overflow:ellipsis">{{ br.label }}</div>
+              </sc-for>
+              <svg style="position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none" preserveAspectRatio="none">
+                <sc-for list="{{ roadEdges }}" as="e" hint-placeholder-count="14">
+                  <line x1="{{ e.x1 }}" y1="{{ e.y1 }}" x2="{{ e.x2 }}" y2="{{ e.y2 }}" stroke="{{ e.stroke }}" stroke-width="{{ e.w }}" stroke-dasharray="{{ e.dash }}" opacity="{{ e.op }}"></line>
+                </sc-for>
+                <sc-for list="{{ famEdges }}" as="fe" hint-placeholder-count="3">
+                  <line x1="{{ fe.x1 }}" y1="{{ fe.y1 }}" x2="{{ fe.x2 }}" y2="{{ fe.y2 }}" stroke="{{ fe.color }}" stroke-width="1.3" stroke-dasharray="2 4" opacity="0.55"></line>
+                </sc-for>
+              </svg>
+              <sc-for list="{{ roadNodes }}" as="nd" hint-placeholder-count="14">
+                <div style="{{ nd.labelStyle }}">{{ nd.name }}</div>
+                <div onClick="{{ nd.onClick }}" draggable="{{ nd.draggable }}" onDragStart="{{ nd.onDragStart }}" onMouseEnter="{{ nd.onEnter }}" onMouseLeave="{{ nd.onLeave }}" style="{{ nd.dotStyle }}">
+                  <sc-if value="{{ nd.isHovered }}" hint-placeholder-val="{{ false }}">
+                    <div style="position:absolute;bottom:24px;left:50%;transform:translateX(-50%);white-space:nowrap;background:#0F172A;border:1px solid #475569;border-radius:6px;padding:4px 9px;font-size:11px;color:#F1F5F9;z-index:6;pointer-events:none"><span style="font-family:'Space Mono',monospace;color:#94A3B8">{{ nd.code }}</span> · {{ nd.family }}</div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;gap:18px;margin-top:14px;flex-wrap:wrap;align-items:center">
+              <sc-for list="{{ catLegend }}" as="c" hint-placeholder-count="4"><span style="display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#94A3B8"><span style="width:10px;height:10px;border-radius:50%;background:{{ c.color }}"></span>{{ c.cat }}</span></sc-for>
+              <span style="display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#94A3B8"><span style="width:12px;height:12px;border-radius:50%;border:2px solid rgba(255,255,255,.6);background:#475569"></span>core · must-pass</span>
+              <span style="display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#94A3B8"><span style="width:10px;height:10px;border-radius:3px;border:1.5px dashed rgba(255,255,255,.5);background:#475569"></span>support · side-loop</span>
+              <span style="display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#475569">drag sideways to set sub-step order, across bands to re-level</span>
+            </div>
+            <sc-if value="{{ hasRecurring }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:16px;background:#1E293B;border:1px solid #334155;border-radius:10px;padding:12px 14px">
+                <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#64748B;margin-bottom:9px">Recurring exercises <span style="color:#475569;text-transform:none;letter-spacing:0">— same tool, intensifying across levels. Candidates to merge into one parametric exercise.</span></div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                  <sc-for list="{{ recurringFamilies }}" as="f" hint-placeholder-count="3"><span style="display:inline-flex;align-items:center;gap:8px;background:#0F172A;border:1px solid #334155;border-radius:8px;padding:6px 11px;font-size:12px;color:#E2E8F0"><span style="width:9px;height:9px;border-radius:50%;background:{{ f.color }}"></span><span style="font-weight:600">{{ f.name }}</span><span style="color:#64748B;font-size:11px">×{{ f.count }} · {{ f.span }}</span></span></sc-for>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+          <!-- choices: the exercises a learner can access at a given floor (opposite the macro on the left) -->
+          <div style="width:300px;flex-shrink:0;display:flex;flex-direction:column;gap:11px">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:#64748B;font-weight:700">Learner can pick</div>
+            <div style="font-size:11px;color:#64748B;line-height:1.5">Set a floor stage — these are the exercises unlocked and free to choose at that point in the climb.</div>
+            <div style="display:flex;flex-wrap:wrap;background:#13203A;border:1px solid #334155;border-radius:9px;padding:3px;gap:2px">
+              <sc-for list="{{ freedom.stepper }}" as="fs" hint-placeholder-count="5"><button onClick="{{ fs.onClick }}" style="{{ fs.style }}">{{ fs.l }}</button></sc-for>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
+              <span style="font-size:18px;font-weight:700;color:#6EE7B7">{{ freedom.count }}</span>
+              <span style="font-size:12px;color:#94A3B8">to choose from</span>
+              <span style="font-size:11px;color:#64748B">· {{ freedom.newCount }} new at {{ freedom.stage }}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <sc-for list="{{ freedom.options }}" as="o" hint-placeholder-count="6">
+                <div onClick="{{ o.onClick }}" style="{{ o.chipStyle }}">
+                  <span style="{{ o.dotStyle }}"></span>
+                  <span style="{{ o.tagStyle }}">{{ o.code }}</span>
+                  <span style="flex:1">{{ o.name }}</span>
+                  <sc-if value="{{ o.isNew }}" hint-placeholder-val="{{ false }}"><span style="font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:#6EE7B7;border:1px solid #2F5D4A;border-radius:5px;padding:1px 5px">new</span></sc-if>
+                </div>
+              </sc-for>
+            </div>
+            <div style="margin-top:2px;padding-top:10px;border-top:1px dashed #334155;font-size:11px;color:#64748B;line-height:1.5">🔒 {{ freedom.lockedLabel }}</div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+  </main>
+
+  <!-- ════ DETAIL MODAL ════ -->
+  <sc-if value="{{ hasDetail }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ onCloseDetail }}" style="position:fixed;inset:0;background:rgba(7,11,20,.74);backdrop-filter:blur(3px);display:flex;align-items:flex-start;justify-content:center;padding:56px 20px;z-index:60;overflow:auto">
+      <div onClick="{{ detail.stop }}" style="width:100%;max-width:660px;background:#1E293B;border:1px solid #3A4A63;border-radius:16px;box-shadow:0 24px 70px rgba(0,0,0,.55);padding:22px 24px 24px">
+
+        <div style="display:flex;align-items:center;gap:11px;margin-bottom:16px">
+          <div style="{{ detail.dotStyle }}"></div>
+          <span style="font-family:'Space Mono',monospace;font-size:14px;font-weight:600;color:#CBD5E1;background:#0F172A;border:1px solid #334155;border-radius:6px;padding:3px 9px;flex-shrink:0">{{ detail.code }}</span>
+          <input value="{{ detail.name }}" onChange="{{ detail.onName }}" style="flex:1;background:transparent;border:none;color:#F1F5F9;font-size:18px;font-weight:600;padding:2px 0;border-bottom:1px solid transparent" style-focus="border-bottom:1px solid #475569">
+          <sc-if value="{{ detail.isStep }}" hint-placeholder-val="{{ false }}"><span style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#93C5FD;border:1px solid #2F4A63;background:#13203A;border-radius:5px;padding:2px 7px;font-weight:700;flex-shrink:0">step</span></sc-if>
+          <button onClick="{{ detail.onToggleActive }}" title="Include in the current roadmap. Off = kept here but greyed out everywhere." style="{{ detail.activeStyle }}">{{ detail.activeLabel }}</button>
+          <button onClick="{{ detail.onPractice }}" title="Simulate on sample text" style="background:#15243B;border:1px solid #2F5D4A;color:#6EE7B7;border-radius:7px;padding:5px 13px;font-size:13px;font-weight:600;flex-shrink:0">{{ detail.practiceLabel }}</button>
+          <button onClick="{{ detail.onDel }}" title="Delete this exercise" style="color:#F87171;font-size:12px;font-weight:600;border:1px solid #7F3535;background:rgba(220,80,80,.1);border-radius:7px;padding:6px 11px;flex-shrink:0">Delete</button>
+          <button onClick="{{ onCloseDetail }}" title="Close" style="color:#94A3B8;font-size:22px;line-height:1;padding:2px 8px;border-radius:7px">×</button>
+        </div>
+
+        <sc-if value="{{ detail.isNotStep }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;gap:5px;margin-bottom:14px;flex-wrap:wrap">
+            <sc-for list="{{ detail.catState }}" as="cat" hint-placeholder-count="4">
+              <button onClick="{{ cat.onClick }}" style="{{ cat.chipStyle }}">{{ cat.c }}</button>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ detail.isStep }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#13203A;border:1px solid #2F4A63;border-radius:9px;padding:11px 13px;margin-bottom:14px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;flex-wrap:wrap">
+              <span style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#93C5FD;font-weight:700">Modality rotation</span>
+              <span style="font-size:11px;color:#CBD5E1;font-family:'Space Mono',monospace">{{ detail.rotationText }}</span>
+              <span style="font-size:10.5px;color:#64748B">· clear by finishing · scaffold = {{ detail.scaffoldBandLabel }}</span>
+            </div>
+            <div style="display:flex;gap:7px;flex-wrap:wrap">
+              <sc-for list="{{ detail.modState }}" as="md" hint-placeholder-count="4">
+                <button onClick="{{ md.onClick }}" style="{{ md.chipStyle }}"><span style="{{ md.letterStyle }}">{{ md.letter }}</span><span style="{{ md.nameStyle }}">{{ md.mechName }}</span></button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
+          <div style="display:flex;gap:2px;background:#0F172A;border:1px solid #334155;border-radius:8px;padding:2px">
+            <sc-for list="{{ detail.levelState }}" as="lv" hint-placeholder-count="5"><button onClick="{{ lv.onClick }}" style="{{ lv.style }}">{{ lv.l }}</button></sc-for>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span style="font-size:11px;color:#64748B">grading</span>
+            <button onClick="{{ detail.onCap }}" style="{{ detail.capStyle }}">{{ detail.capLabel }}</button>
+          </div>
+          <div style="display:flex;gap:2px;background:#0F172A;border:1px solid #334155;border-radius:8px;padding:2px">
+            <span style="font-size:11px;color:#64748B;padding:5px 6px 5px 8px">checkpoint</span>
+            <sc-for list="{{ detail.cpState }}" as="cp" hint-placeholder-count="3"><button onClick="{{ cp.onClick }}" style="{{ cp.style }}">{{ cp.c }}</button></sc-for>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span style="font-size:11px;color:#64748B">type</span>
+            <button onClick="{{ detail.onToggleKind }}" title="Core = must-pass spine. Support = side-loop that feeds back into a core when struggling." style="{{ detail.kindStyle }}">{{ detail.kindLabel }}</button>
+          </div>
+          <div style="flex:1"></div>
+          <div style="display:flex;gap:5px;align-items:center">
+            <span style="font-size:10.5px;color:#475569">find in</span>
+            <button onClick="{{ detail.onFindMatrix }}" style="font-size:11px;color:#94A3B8;border:1px solid #334155;border-radius:6px;padding:4px 9px" style-hover="border-color:#475569;color:#CBD5E1">Matrix</button>
+            <button onClick="{{ detail.onFindRoadmap }}" style="font-size:11px;color:#94A3B8;border:1px solid #334155;border-radius:6px;padding:4px 9px" style-hover="border-color:#475569;color:#CBD5E1">Roadmap</button>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:22px;flex-wrap:wrap;margin-bottom:16px">
+          <label style="display:flex;flex-direction:column;gap:5px;flex:1;min-width:200px">
+            <span style="font-size:11px;color:#94A3B8">support — text shown <span style="font-family:'Space Mono',monospace;color:#CBD5E1">{{ detail.supportLabel }}</span></span>
+            <input type="range" min="0" max="100" value="{{ detail.support }}" onInput="{{ detail.onSupport }}" style="width:100%">
+          </label>
+          <label style="display:flex;flex-direction:column;gap:5px;flex:1;min-width:200px">
+            <span style="font-size:11px;color:#94A3B8">demand — take-in→perform <span style="font-family:'Space Mono',monospace;color:#CBD5E1">{{ detail.demandLabel }}</span></span>
+            <input type="range" min="0" max="100" value="{{ detail.demand }}" onInput="{{ detail.onDemand }}" style="width:100%">
+          </label>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <label style="display:flex;flex-direction:column;gap:5px">
+            <span style="font-size:11px;color:#64748B">spec — what the learner does</span>
+            <input value="{{ detail.spec }}" onChange="{{ detail.onSpec }}" placeholder="spec" style="background:#0F172A;border:1px solid #334155;border-radius:7px;color:#CBD5E1;font-size:13px;padding:9px 11px">
+          </label>
+          <label style="display:flex;flex-direction:column;gap:5px">
+            <span style="font-size:11px;color:#64748B">notes</span>
+            <input value="{{ detail.notes }}" onChange="{{ detail.onNotes }}" placeholder="notes" style="background:#0F172A;border:1px solid #334155;border-radius:7px;color:#94A3B8;font-size:13px;padding:9px 11px">
+          </label>
+        </div>
+
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ════ DELETE CONFIRM ════ -->
+  <sc-if value="{{ confirmDelete }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ onCancelDelete }}" style="position:fixed;inset:0;background:rgba(7,11,20,.8);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:20px;z-index:80">
+      <div onClick="{{ stopEvt }}" style="width:100%;max-width:430px;background:#1E293B;border:1px solid #3A4A63;border-radius:14px;box-shadow:0 24px 70px rgba(0,0,0,.6);padding:22px 24px">
+        <div style="font-size:16px;font-weight:700;color:#F1F5F9;margin-bottom:9px">Delete this exercise?</div>
+        <div style="font-size:13px;line-height:1.65;color:#94A3B8">Are you sure you want to delete <b style="color:#E2E8F0">{{ confirmDeleteName }}</b>? This will permanently delete it from all views.</div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+          <button onClick="{{ onCancelDelete }}" style="font-size:13px;color:#94A3B8;border:1px solid #334155;background:transparent;border-radius:8px;padding:8px 16px">Cancel</button>
+          <button onClick="{{ onConfirmDelete }}" style="font-size:13px;font-weight:600;color:#FCA5A5;border:1px solid #7F3535;background:rgba(220,80,80,.14);border-radius:8px;padding:8px 16px">Delete permanently</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ════ PRACTICE MODAL ════ -->
+  <sc-if value="{{ hasPractice }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ practiceVM.onClose }}" style="position:fixed;inset:0;background:rgba(7,11,20,.82);backdrop-filter:blur(3px);display:flex;align-items:flex-start;justify-content:center;padding:44px 20px;z-index:80;overflow:auto">
+      <div onClick="{{ practiceVM.stop }}" style="width:100%;max-width:720px;background:#1E293B;border:1px solid #3A4A63;border-radius:16px;box-shadow:0 24px 70px rgba(0,0,0,.6);overflow:hidden">
+
+        <div style="display:flex;align-items:center;gap:11px;padding:17px 22px;border-bottom:1px solid #334155">
+          <span style="width:11px;height:11px;border-radius:50%;background:{{ practiceVM.catColor }};flex-shrink:0"></span>
+          <span style="font-family:'Space Mono',monospace;font-size:12px;color:#94A3B8;background:#0F172A;border:1px solid #334155;border-radius:6px;padding:3px 8px;flex-shrink:0">{{ practiceVM.code }}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:16px;font-weight:700;color:#F1F5F9">{{ practiceVM.name }}</div>
+            <div style="font-size:11px;color:#64748B">{{ practiceVM.level }} · {{ practiceVM.cats }} · sim&nbsp;<span style="font-family:'Space Mono',monospace;color:#94A3B8">{{ practiceVM.mech }}</span></div>
+          </div>
+          <sc-if value="{{ practiceVM.isSeq }}" hint-placeholder-val="{{ false }}"><span style="font-family:'Space Mono',monospace;font-size:11px;color:#6EE7B7;background:#15243B;border:1px solid #2F5D4A;border-radius:6px;padding:3px 9px;flex-shrink:0">{{ practiceVM.stepLabel }}</span></sc-if>
+          <button onClick="{{ practiceVM.onClose }}" title="Close" style="color:#94A3B8;font-size:22px;line-height:1;padding:2px 8px">×</button>
+        </div>
+
+        <div style="padding:9px 22px;background:#15203A;font-size:12.5px;color:#94A3B8;border-bottom:1px solid #1e2d49">{{ practiceVM.spec }}</div>
+
+        <div style="padding:22px;min-height:190px">
+          <sc-if value="{{ practiceVM.isRead }}" hint-placeholder-val="{{ true }}">
+            <sc-if value="{{ practiceVM.readAloud }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#F472B6;margin-bottom:12px">🔊 Read the whole text out loud, once.</div></sc-if>
+            <div style="font-size:17px;line-height:1.85;color:#E2E8F0;white-space:pre-wrap">{{ practiceVM.sampleText }}</div>
+          </sc-if>
+
+          <sc-if value="{{ practiceVM.isRsvp }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#0F172A;border:1px solid #334155;border-radius:12px;height:128px;display:flex;align-items:center;justify-content:center;margin-bottom:14px"><span style="font-family:'Space Mono',monospace;font-size:38px;font-weight:700;color:#F1F5F9">{{ practiceVM.rsvpWord }}</span></div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <button onClick="{{ practiceVM.onRsvpToggle }}" style="background:#34D399;color:#0F172A;font-weight:700;font-size:13px;padding:8px 16px;border-radius:8px">{{ practiceVM.rsvpPlayLabel }}</button>
+              <button onClick="{{ practiceVM.onRsvpReset }}" style="background:transparent;border:1px solid #475569;color:#CBD5E1;font-size:13px;padding:8px 12px;border-radius:8px">↻</button>
+              <div style="flex:1;height:5px;background:#0F172A;border-radius:3px;overflow:hidden"><div style="height:5px;background:#34D399;width:{{ practiceVM.rsvpProgress }}"></div></div>
+              <span style="font-size:11px;color:#64748B;font-family:'Space Mono',monospace;flex-shrink:0">{{ practiceVM.rsvpCount }}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:13px;padding-top:12px;border-top:1px solid #1e2d49">
+              <span style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#6EE7B7;font-weight:700;flex-shrink:0">free practice</span>
+              <span style="font-size:11px;color:#94A3B8;flex-shrink:0">speed</span>
+              <input type="range" min="0" max="100" value="{{ practiceVM.rsvpDiff }}" onInput="{{ practiceVM.onRsvpSpeed }}" style="flex:1">
+              <span style="font-family:'Space Mono',monospace;font-size:12px;color:#CBD5E1;flex-shrink:0">{{ practiceVM.rsvpWpm }} wpm</span>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ practiceVM.isCloze }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+              <span style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#6EE7B7;font-weight:700;flex-shrink:0">free practice</span>
+              <span style="font-size:11px;color:#94A3B8;flex-shrink:0">blanks</span>
+              <input type="range" min="10" max="90" value="{{ practiceVM.clozeDiff }}" onInput="{{ practiceVM.onClozeDiff }}" style="flex:1">
+              <span style="font-family:'Space Mono',monospace;font-size:12px;color:#CBD5E1;flex-shrink:0">{{ practiceVM.clozePct }} blanked</span>
+            </div>
+            <div style="font-size:16px;line-height:2.2;color:#E2E8F0">
+              <sc-for list="{{ practiceVM.clozeTokens }}" as="t" hint-placeholder-count="20"><sc-if value="{{ t.isBlank }}" hint-placeholder-val="{{ false }}"><input value="{{ t.value }}" onInput="{{ t.onInput }}" style="width:{{ t.width }};background:#0F172A;border:none;border-bottom:1.5px solid {{ t.bd }};color:{{ t.col }};font-size:15px;text-align:center;padding:1px 3px;margin:0 2px"></sc-if><sc-if value="{{ t.isWord }}" hint-placeholder-val="{{ true }}"><span>{{ t.w }}</span></sc-if></sc-for>
+            </div>
+            <div style="display:flex;gap:9px;margin-top:16px">
+              <button onClick="{{ practiceVM.onClozeCheck }}" style="background:#34D399;color:#0F172A;font-weight:700;font-size:13px;padding:8px 16px;border-radius:8px">Check</button>
+              <button onClick="{{ practiceVM.onClozeReset }}" style="background:transparent;border:1px solid #475569;color:#CBD5E1;font-size:13px;padding:8px 14px;border-radius:8px">Reset</button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ practiceVM.isFirst }}" hint-placeholder-val="{{ false }}">
+            <sc-if value="{{ practiceVM.reciteAloud }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#F472B6;margin-bottom:12px">🔊 Recite aloud from the first-letter scaffold.</div></sc-if>
+            <div style="font-size:18px;line-height:2.1;color:#CBD5E1">
+              <sc-for list="{{ practiceVM.firstTokens }}" as="t" hint-placeholder-count="20"><sc-if value="{{ practiceVM.revealed }}" hint-placeholder-val="{{ false }}"><span style="color:#34D399;margin-right:9px">{{ t.full }}</span></sc-if><sc-if value="{{ practiceVM.notRevealed }}" hint-placeholder-val="{{ true }}"><span style="font-family:'Space Mono',monospace;margin-right:9px">{{ t.scaffold }}</span></sc-if></sc-for>
+            </div>
+            <button onClick="{{ practiceVM.onReveal }}" style="margin-top:16px;background:transparent;border:1px solid #475569;color:#CBD5E1;font-size:13px;padding:8px 14px;border-radius:8px">{{ practiceVM.revealLabel }}</button>
+          </sc-if>
+
+          <sc-if value="{{ practiceVM.isCue }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{ practiceVM.cueLines }}" as="cl" hint-placeholder-count="3"><div style="background:#0F172A;border:1px solid #334155;border-radius:9px;padding:11px 13px"><div style="font-size:14px"><span style="color:#F472B6;font-weight:600">{{ cl.cue }}</span></div><sc-if value="{{ practiceVM.revealed }}" hint-placeholder-val="{{ false }}"><div style="font-size:14px;color:#E2E8F0;margin-top:6px">{{ cl.full }}</div></sc-if></div></sc-for>
+            </div>
+            <button onClick="{{ practiceVM.onReveal }}" style="margin-top:14px;background:transparent;border:1px solid #475569;color:#CBD5E1;font-size:13px;padding:8px 14px;border-radius:8px">{{ practiceVM.revealLabel }}</button>
+          </sc-if>
+
+          <sc-if value="{{ practiceVM.isType }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:15px;line-height:1.8;color:#94A3B8;background:#0F172A;border:1px solid #334155;border-radius:10px;padding:13px;margin-bottom:12px">{{ practiceVM.sampleText }}</div>
+            <textarea value="{{ practiceVM.typed }}" onInput="{{ practiceVM.onTyped }}" placeholder="Type it while you read…" style="width:100%;min-height:110px;resize:vertical;background:#0F172A;border:1px solid #334155;border-radius:10px;color:#E2E8F0;font-size:15px;line-height:1.7;padding:12px"></textarea>
+          </sc-if>
+
+          <sc-if value="{{ practiceVM.isProduce }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:13px;color:#94A3B8;margin-bottom:10px">Nothing shown — reproduce the whole passage cold.</div>
+            <textarea value="{{ practiceVM.typed }}" onInput="{{ practiceVM.onTyped }}" placeholder="Type the whole passage from memory…" style="width:100%;min-height:120px;resize:vertical;background:#0F172A;border:1px solid #334155;border-radius:10px;color:#E2E8F0;font-size:15px;line-height:1.7;padding:12px;margin-bottom:12px"></textarea>
+            <button onClick="{{ practiceVM.onReveal }}" style="background:transparent;border:1px solid #475569;color:#CBD5E1;font-size:13px;padding:8px 14px;border-radius:8px">{{ practiceVM.revealLabel }}</button>
+            <sc-if value="{{ practiceVM.revealed }}" hint-placeholder-val="{{ false }}"><div style="margin-top:12px;font-size:14px;line-height:1.8;color:#6EE7B7;background:#15243B;border:1px solid #2F5D4A;border-radius:10px;padding:12px">{{ practiceVM.sampleText }}</div></sc-if>
+          </sc-if>
+
+          <sc-if value="{{ practiceVM.isPerform }}" hint-placeholder-val="{{ false }}">
+            <div style="text-align:center;padding:14px 10px">
+              <div style="font-size:40px">🎭</div>
+              <div style="font-size:15px;color:#E2E8F0;margin-top:8px;max-width:380px;margin-left:auto;margin-right:auto">Perform the whole piece aloud, from memory. Nothing is shown.</div>
+              <button onClick="{{ practiceVM.onReveal }}" style="margin-top:16px;background:transparent;border:1px solid #475569;color:#CBD5E1;font-size:13px;padding:8px 14px;border-radius:8px">{{ practiceVM.revealLabel }}</button>
+              <sc-if value="{{ practiceVM.revealed }}" hint-placeholder-val="{{ false }}"><div style="margin-top:14px;font-size:15px;line-height:1.8;color:#94A3B8;text-align:left">{{ practiceVM.sampleText }}</div></sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ practiceVM.isAudio }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#15203A;border:1px dashed #475569;border-radius:10px;padding:15px;margin-bottom:14px;color:#94A3B8;font-size:13px;line-height:1.6">🔈 {{ practiceVM.audioNote }}</div>
+            <div style="font-size:15px;line-height:1.8;color:#CBD5E1">{{ practiceVM.sampleText }}</div>
+          </sc-if>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 22px;border-top:1px solid #334155">
+          <sc-if value="{{ practiceVM.isSeq }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ practiceVM.onPrev }}" style="background:transparent;border:1px solid #475569;color:#CBD5E1;font-size:13px;padding:8px 14px;border-radius:8px;opacity:{{ practiceVM.prevOpacity }}">‹ Prev</button>
+            <button onClick="{{ practiceVM.onNext }}" style="background:#334155;border:1px solid #475569;color:#F1F5F9;font-size:13px;font-weight:600;padding:8px 16px;border-radius:8px;opacity:{{ practiceVM.nextOpacity }}">Next ›</button>
+          </sc-if>
+          <div style="flex:1"></div>
+          <button onClick="{{ practiceVM.onClose }}" style="background:transparent;color:#94A3B8;font-size:13px;padding:8px 14px;border-radius:8px">Done</button>
+        </div>
+
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  CATS = { Reading:'#60A5FA', Listening:'#A78BFA', Writing:'#34D399', Speaking:'#F472B6' };
+  CATORDER = ['Reading','Listening','Writing','Speaking'];
+  LEVELS = ['Meet','Recognize','Recall','Produce','Perform'];
+  CATLETTER = { Reading:'R', Listening:'L', Writing:'W', Speaking:'S' };
+  LEVELNUM = { Meet:1, Recognize:2, Recall:3, Produce:4, Perform:5 };
+  LEVELACCENT = { Meet:'#60A5FA', Recognize:'#A78BFA', Recall:'#34D399', Produce:'#FBBF24', Perform:'#F472B6' };
+  LEVELDESC = { Meet:'First encounter — get the text in front of you.', Recognize:'Know it when you see it — light scaffolds.', Recall:'Retrieve it with shrinking support.', Produce:'Reproduce it cold, from nothing.', Perform:'Deliver it live, aloud, for someone.' };
+
+  MECHANICS = {
+    'silent-read':'read', 'read-aloud':'readAloud', 'rsvp-slow':'rsvp', 'rsvp-fast':'rsvp',
+    'hear-tts':'audio', 'shadow':'audioMic', 'dictation':'audioType', 'type-as-read':'typeAlong',
+    'cloze25':'cloze', 'cloze50':'cloze', 'cloze75':'cloze', 'first-letters':'firstLetters',
+    'rsvp-mid':'rsvp', 'perform':'performCold',
+    'produce-cold':'produceCold', 'speed-type':'produceCold', 'cue-lines':'cueLines',
+    'recite-fl':'reciteFL', 'perform-cold':'performCold', 'perform-someone':'performCold',
+  };
+  FAMILY = { read:'Read', readAloud:'Read', rsvp:'Speed-read (RSVP)', cloze:'Cloze', firstLetters:'First-letters',
+    produceCold:'Produce cold', performCold:'Perform', cueLines:'Cue-lines', reciteFL:'Recite', typeAlong:'Type-as-read',
+    audio:'Listen', audioMic:'Shadow', audioType:'Dictation' };
+
+  // ── composite step: a modality rotation at one scaffold ──
+  MODORDER = ['Read','Write','Speak','Listen'];
+  MODCAT = { Read:'Reading', Write:'Writing', Speak:'Speaking', Listen:'Listening' };
+  MODLETTER = { Read:'R', Write:'W', Speak:'S', Listen:'L' };
+  modsToCats(mods){ const set=new Set((mods||[]).map(m=>this.MODCAT[m])); return this.CATORDER.filter(c=>set.has(c)); }
+  stepMods(step){ return this.MODORDER.filter(m=>(step.mods||[]).includes(m)); }
+  bandOf(sup){ return sup<12?'full':(sup<45?'partial':(sup<88?'first':'none')); }
+  bandLabel(sup){ return {full:'full text',partial:'partial — cloze / cues',first:'first-letters',none:'nothing shown'}[this.bandOf(sup)]; }
+  mechForMod(mod, sup){ const b=this.bandOf(sup);
+    const T={ Read:{full:'read',partial:'rsvp',first:'firstLetters',none:'firstLetters'},
+              Write:{full:'typeAlong',partial:'cloze',first:'cloze',none:'produceCold'},
+              Speak:{full:'readAloud',partial:'cueLines',first:'reciteFL',none:'performCold'},
+              Listen:{full:'audio',partial:'audioMic',first:'audioType',none:'audioType'} };
+    return T[mod][b]; }
+  addStep(){ const id='step'+Date.now(); const mods=['Read','Write']; this.setState(s=>({ view:'table', exercises:[{ id, nodeType:'step', name:'New step', mods, categories:this.modsToCats(mods), level:'Recall', support:60, demand:60, graded:false, cp:'self', gates:null, spec:'', notes:'' }, ...s.exercises] })); }
+  toggleMod(id, mod){ this.setState(s=>({ exercises:s.exercises.map(e=>{ if(e.id!==id) return e; let mods=(e.mods||[]).includes(mod)? e.mods.filter(x=>x!==mod):[...(e.mods||[]),mod]; if(mods.length===0) mods=e.mods; const ordered=this.MODORDER.filter(m=>mods.includes(m)); return {...e, mods:ordered, categories:this.modsToCats(ordered)}; }) })); }
+  startPracticeStepNode(step){ const mods=this.stepMods(step);
+    const queue=mods.map(m=>{ const mech=this.mechForMod(m, step.support);
+      return {...step, id:step.id+'#'+m, kind:mech, categories:[this.MODCAT[m]], name:step.name+' · '+m, _mod:m, _step:step.name }; });
+    if(queue.length===0) return; this.stopRsvp(); this.setState({ practice:{queue, idx:0, isStep:true, stepName:step.name}, psub:this.freshSub(), selected:null }); }
+
+  // ── free-practice difficulty math (lives in the practice modal, not on the node) ──
+  paramBlankPct(d){ return Math.round(15 + (d||0)*0.7); }                  // 15..85% blanked
+  PARAM_WPM(d){ return Math.round(160 + d/100*600); }                     // 160..760 wpm
+  findIn(target, id){ if(target==='matrix'){ this.setState({ view:'inventory', invMode:'matrix', focusId:id, selected:null }); } else { this.setState({ view:target, focusId:id, selected:null }); } }
+
+  state = {
+    view: 'roadmap', readme: false, focusId: null, focusFamily: null, mx: 'category', my: 'level',
+    filterCat: 'all', filterLevel: 'all', filterCap: 'all', filterFamily: 'all', filterKind: 'all', filterGraded: 'all', filterCp: 'all', filterScaffold: 'all', roadMode: 'climb', invMode: 'table', confirmDelete: null, freedomStage: 'Recall', sortBy: 'order', dragId: null,
+    hover: null, selected: null,
+    sampleText: 'The harbor wakes before the town does. Gulls trade the same three complaints they traded yesterday. A fisherman counts his rope by feel, not by sight. Somewhere a bell decides it is morning, and the boats agree.',
+    practice: null, psub: {},
+    exercises: [
+      { id:'silent-read', name:'Silent read', categories:['Reading'], level:'Meet', support:0, demand:5, graded:false, cp:'self', gates:null, spec:'Read the full text silently, at your own pace.', notes:'Feeds the Meet level.' },
+      { id:'read-aloud', name:'Read aloud', categories:['Speaking'], level:'Meet', support:0, demand:18, graded:false, cp:'self', gates:null, spec:'Read the full text out loud, once.', notes:'Target is speaking — reading is just the input.' },
+      { id:'rsvp-slow', name:'Speed-read · slow', categories:['Reading'], level:'Recognize', support:12, demand:28, graded:false, cp:'none', gates:null, spec:'One word at a time at a comfortable pace.', notes:'Free-practice speed dial available at run time.' },
+      { id:'rsvp-fast', name:'Speed-read · fast', categories:['Reading'], level:'Recall', support:22, demand:42, graded:false, cp:'none', gates:null, spec:'RSVP fast — pushes recognition toward recall.', notes:'' },
+      { id:'hear-tts', name:'Hear it (TTS)', categories:['Listening'], level:'Meet', support:0, demand:6, active:false, graded:false, cp:'self', gates:null, spec:'Text-to-speech playback of the passage.', notes:'Needs TTS engine.' },
+      { id:'shadow', name:'Shadow / echo', categories:['Speaking'], level:'Recognize', support:14, demand:36, active:false, graded:false, cp:'none', gates:null, spec:'Hear a line, echo it back immediately.', notes:'Target is speaking it back. Needs TTS + mic.' },
+      { id:'dictation', name:'Dictation', categories:['Writing'], level:'Recall', support:32, demand:56, active:false, graded:true, cp:'none', gates:null, spec:'Type what you hear.', notes:'Target is writing. Needs TTS.' },
+      { id:'type-as-read', name:'Type-as-read', categories:['Writing'], level:'Meet', support:10, demand:26, graded:true, cp:'none', gates:null, spec:'Type the text while it is visible — builds the motor trace.', notes:'Target is writing.' },
+      { id:'cloze25', name:'Cloze 25%', categories:['Writing'], level:'Recognize', support:25, demand:38, graded:true, cp:'none', gates:null, spec:'Fill in 25% of words removed.', notes:'Free-practice blank% dial available at run time.' },
+      { id:'cloze50', name:'Cloze 50%', categories:['Writing'], level:'Recall', support:50, demand:55, graded:true, cp:'hard', gates:'Recognize', spec:'Fill in 50% of words removed.', notes:'Hard checkpoint to leave Recognize.' },
+      { id:'cloze75', name:'Cloze 75%', categories:['Writing'], level:'Recall', support:75, demand:62, graded:true, cp:'none', gates:null, spec:'Fill in 75% of words removed.', notes:'' },
+      { id:'first-letters', name:'First-letters', categories:['Writing'], level:'Recall', support:62, demand:66, graded:true, cp:'hard', gates:'Recall', spec:'Only first letters shown; type the rest.', notes:'Hard checkpoint to leave Recall.' },
+      { id:'produce-cold', name:'Produce cold', categories:['Writing'], level:'Produce', support:100, demand:85, graded:true, cp:'hard', gates:'Produce', spec:'Reproduce the whole passage from nothing.', notes:'Hard checkpoint — clears Produce, unlocks Perform.' },
+      { id:'speed-type', name:'Speed-type cold', categories:['Writing'], level:'Produce', support:100, demand:92, graded:true, cp:'none', gates:null, spec:'Produce cold, against the clock.', notes:'Timed.' },
+      { id:'cue-lines', name:'Cue-lines', categories:['Speaking'], level:'Recognize', support:30, demand:44, graded:false, cp:'self', gates:null, spec:'First line of each chunk shown as a cue; say the rest aloud.', notes:'' },
+      { id:'recite-fl', name:'Recite from first-letters (aloud)', categories:['Speaking'], level:'Recall', support:60, demand:72, graded:false, cp:'self', gates:null, spec:'First-letters scaffold; recite aloud.', notes:'' },
+      { id:'perform-cold', name:'Perform cold', categories:['Speaking'], level:'Perform', support:100, demand:100, graded:false, cp:'self', gates:null, spec:'Perform the whole piece from memory, aloud, nothing shown.', notes:'' },
+      { id:'perform-someone', name:'Perform for someone', categories:['Speaking'], level:'Perform', support:100, demand:100, graded:false, cp:'self', gates:null, spec:'Perform cold, for a live listener.', notes:'The summit.' },
+    ],
+  };
+
+  updateEx(id, patch){ this.setState(s=>({ exercises: s.exercises.map(e=> e.id===id ? {...e, ...patch} : e) })); }
+  delEx(id){ this.setState(s=>({ exercises: s.exercises.filter(e=> e.id!==id) })); }
+  CLEARFILTERS = { filterCat:'all', filterLevel:'all', filterCap:'all', filterFamily:'all', filterKind:'all', filterGraded:'all', filterCp:'all', filterScaffold:'all' };
+  addEx(){ const id='ex'+Date.now(); this.setState(s=>Object.assign({}, this.CLEARFILTERS, { view:'table', sortBy:'order', selected:id, exercises:[{ id, name:'New exercise', categories:['Writing'], level:'Meet', kind:'support', support:50, demand:50, active:true, graded:false, cp:'none', gates:null, spec:'', notes:'' }, ...s.exercises] })); }
+  addExAtLevel(level){ const id='ex'+Date.now(); this.setState(s=>Object.assign({}, this.CLEARFILTERS, { exercises:[{ id, name:'New exercise', categories:['Writing'], level, kind:'support', support:50, demand:50, active:true, graded:false, cp:'self', gates:null, spec:'', notes:'' }, ...s.exercises], selected:id })); }
+  toggleCat(id, c){ this.updateEx(id, {categories:[c]}); }   // single target category per exercise
+
+  // ── exercise mechanic + family ──
+  mechanicOf(e){ if(this.MECHANICS[e.id]) return this.MECHANICS[e.id];
+    if(e.support>=95) return e.categories.includes('Speaking')?'performCold':'produceCold';
+    if(e.categories.includes('Listening')) return 'audio';
+    if(e.graded) return 'cloze'; return 'read'; }
+  familyOf(e){ return this.FAMILY[this.mechanicOf(e)] || e.name; }
+  FAMILIES = {
+    'silent-read':'Silent read', 'read-aloud':'Read aloud', 'type-as-read':'Type-as-read', 'hear-tts':'Hear it',
+    'rsvp-slow':'Speed-read', 'rsvp-fast':'Speed-read', 'rsvp-mid':'Speed-read',
+    'cloze25':'Cloze', 'cloze50':'Cloze', 'cloze75':'Cloze',
+    'cue-lines':'Cue-lines', 'shadow':'Shadow', 'dictation':'Dictation',
+    'first-letters':'First-letters', 'recite-fl':'First-letters',
+    'produce-cold':'Produce cold', 'speed-type':'Produce cold',
+    'perform':'Perform', 'perform-cold':'Perform', 'perform-someone':'Perform',
+  };
+  famOf(e){ return e.family || this.FAMILIES[e.id] || this.familyOf(e); }
+  AXES = [['category','Category'],['level','Level'],['family','Family'],['kind','Core / support'],['graded','Grading'],['cp','Checkpoint'],['status','On / off'],['scaffold','Scaffold band']];
+  SCAFFOLD_BANDS = ['full','high','partial','low','none'];
+  axVal(e, ax){
+    if(ax==='category') return e.categories[0];
+    if(ax==='level') return e.level;
+    if(ax==='family') return this.famOf(e);
+    if(ax==='kind') return e.kind==='support' ? 'support' : 'core';
+    if(ax==='graded') return e.graded ? 'graded' : 'ungraded';
+    if(ax==='cp') return e.cp || 'none';
+    if(ax==='status') return e.active===false ? 'off' : 'on';
+    if(ax==='scaffold'){ const v=+e.support||0; return v>=80?'full':v>=55?'high':v>=30?'partial':v>=10?'low':'none'; }
+    return '';
+  }
+  axDomain(ax, list){
+    if(ax==='category') return this.CATORDER;
+    if(ax==='level') return this.LEVELS;
+    if(ax==='kind') return ['core','support'];
+    if(ax==='graded') return ['ungraded','graded'];
+    if(ax==='cp') return ['none','self','hard'];
+    if(ax==='status') return ['on','off'];
+    if(ax==='scaffold') return this.SCAFFOLD_BANDS;
+    return [...new Set(list.map(e=>this.axVal(e,ax)))].sort();
+  }
+  axPatch(ax, v){
+    if(ax==='category') return {categories:[v]};
+    if(ax==='level') return {level:v};
+    if(ax==='family') return {family:v};
+    if(ax==='kind') return {kind:v};
+    if(ax==='graded') return {graded:v==='graded'};
+    if(ax==='cp') return {cp:v};
+    if(ax==='status') return {active:v==='on'};
+    return null;
+  }
+  axColor(ax, v){ return ax==='category' ? this.CATS[v] : (ax==='kind' ? (v==='core'?'#6EE7B7':'#64748B') : '#64748B'); }
+  toggleFamily(f){ this.setState(s=>({ focusFamily: s.focusFamily===f? null : f, focusId:null })); }
+  clozePctOf(e){ const m=(e.name.match(/(\d+)\s*%/)||(e.id||'').match(/(\d+)/)); return m? Math.max(10,Math.min(90,+m[1])) : Math.max(20,Math.min(80,e.support)); }
+  words(t){ return (t||'').trim().split(/\s+/).filter(Boolean); }
+  scaffoldText(lv){
+    const t=(this.state.sampleText||'').trim(); const ws=this.words(t);
+    if(lv==='Meet') return t;
+    if(lv==='Recognize') return ws.map((w,i)=> (i%3===2)?'▁▁▁▁':w).join(' ');
+    if(lv==='Recall') return ws.map(w=>{ const a=w.replace(/[^A-Za-z]/g,''); return a? a[0]+'·'.repeat(Math.max(0,a.length-1)) : w; }).join(' ');
+    if(lv==='Produce') return ws.map(w=>'▁'.repeat(Math.min(7,Math.max(2,w.replace(/[^A-Za-z]/g,'').length)))).join(' ');
+    return '(nothing shown — recite the whole piece from memory)';
+  }
+
+  // ── practice / simulation ──
+  freshSub(){ return { rsvpIdx:0, rsvpPlaying:false, rsvpDiff:40, clozeVals:{}, clozeChecked:false, clozePct:null, revealed:false, typed:'' }; }
+  rsvpBeat(){ const d=this.state.psub.rsvpDiff!=null?this.state.psub.rsvpDiff:40; return Math.max(80, Math.round(60000/this.PARAM_WPM(d))); }
+  startPractice(ids, idx){ this.stopRsvp(); this.setState({ practice:{ queue:ids, idx:idx||0 }, psub:this.freshSub(), selected:null }); }
+  practiceOne(id){ this.startPractice([id],0); }
+  practiceAll(){ const order=['Meet','Recognize','Recall','Produce','Perform']; const ids=[];
+    order.forEach(lv=> this.state.exercises.filter(e=>e.level===lv).sort((a,b)=>a.demand-b.demand).forEach(e=>ids.push(e.id)));
+    this.startPractice(ids,0); }
+  practiceStep(d){ const p=this.state.practice; if(!p) return; const ni=p.idx+d; if(ni<0||ni>=p.queue.length) return; this.stopRsvp(); this.setState({ practice:{...p, idx:ni}, psub:this.freshSub() }); }
+  closePractice(){ this.stopRsvp(); this.setState({ practice:null }); }
+  setSub(patch){ this.setState(s=>({ psub:{...s.psub, ...patch} })); }
+  stopRsvp(){ if(this._rsvpT){ clearInterval(this._rsvpT); this._rsvpT=null; } }
+  rsvpTick(total){ const i=this.state.psub.rsvpIdx; if(i>=total-1){ this.stopRsvp(); this.setSub({rsvpPlaying:false}); } else { this.setSub({rsvpIdx:i+1}); } }
+  toggleRsvp(total){ const playing=!this.state.psub.rsvpPlaying; this.setSub({rsvpPlaying:playing}); this.stopRsvp();
+    if(playing){ this._rsvpT=setInterval(()=>this.rsvpTick(total), this.rsvpBeat()); } }
+  rsvpReset(){ this.stopRsvp(); this.setSub({rsvpIdx:0, rsvpPlaying:false}); }
+  setRsvpDiff(total, v){ const d=+v; this.setSub({rsvpDiff:d}); if(this.state.psub.rsvpPlaying){ this.stopRsvp(); const beat=Math.max(80, Math.round(60000/this.PARAM_WPM(d))); this._rsvpT=setInterval(()=>this.rsvpTick(total), beat); } }
+  setClozePct(v){ this.setSub({clozePct:+v, clozeChecked:false, clozeVals:{}}); }
+  componentWillUnmount(){ this.stopRsvp(); }
+  componentDidMount(){ this._loadShared(0); }
+  _loadShared(tries){ if(window.MEMORIA){ try{ const list=window.MEMORIA.load(); if(Array.isArray(list)&&list.length) this.setState({exercises:list}); }catch(e){} return; } if((tries||0)<25) setTimeout(()=>this._loadShared((tries||0)+1), 50); }
+  componentDidUpdate(prevProps, prevState){ if(prevState && prevState.exercises!==this.state.exercises && window.MEMORIA){ window.MEMORIA.save(this.state.exercises); } }
+
+  computeCodes(exs){
+    const byLevel = {};
+    exs.forEach(e=>{ const k=this.LEVELNUM[e.level]; (byLevel[k]=byLevel[k]||[]).push(e); });
+    const map = {};
+    Object.keys(byLevel).forEach(k=>{
+      // sub-steps: ordered sequence within a step, regardless of modality → 3.1W, 3.2W, 3.3S
+      const arr = byLevel[k].sort((a,b)=> this.ordVal(a)-this.ordVal(b) || this.familyOf(a).localeCompare(this.familyOf(b)) || a.demand-b.demand || a.support-b.support || a.name.localeCompare(b.name));
+      arr.forEach((e,i)=>{
+        const mod = this.CATORDER.filter(c=>e.categories.includes(c)).map(c=>this.CATLETTER[c]).join('');
+        map[e.id] = k+'.'+(i+1)+mod;       // {step}.{substep}{modality} → 3.1W, 3.2W, 1.1RWS
+      });
+    });
+    return map;
+  }
+
+  ordVal(e){ return (typeof e.ord==='number') ? e.ord : 9999; }
+  orderedGroup(exs, level){ const k=this.LEVELNUM[level];
+    return exs.filter(e=>this.LEVELNUM[e.level]===k).sort((a,b)=> this.ordVal(a)-this.ordVal(b) || this.familyOf(a).localeCompare(this.familyOf(b)) || a.demand-b.demand); }
+  reorder(id, patch, beforeId){ this.setState(s=>{
+    let exs = s.exercises.map(e=> e.id===id ? {...e, ...patch} : e);
+    const moved = exs.find(e=>e.id===id); if(!moved) return {};
+    const group = this.orderedGroup(exs, moved.level).filter(e=>e.id!==id);
+    let idx = group.length; if(beforeId){ const bi=group.findIndex(e=>e.id===beforeId); if(bi>=0) idx=bi; }
+    group.splice(idx,0,moved);
+    const ords={}; group.forEach((e,i)=> ords[e.id]=i);
+    return { exercises: exs.map(e=> (e.id in ords) ? {...e, ord:ords[e.id]} : e), dragId:null };
+  }); }
+  applyCode(id, str){ str=(str||'').trim(); let step,pos,mods;
+    let m=str.match(/^(\d)\.(\d+)\s*([RWSLrwsl]*)$/);            // 3.2W
+    if(m){ step=+m[1]; pos=+m[2]; mods=m[3]; }
+    else { m=str.match(/^(\d)\s*([RWSLrwsl]*)\s*(\d*)$/);        // 3W2 / 3W / 3
+      if(!m) return; step=+m[1]; mods=m[2]; pos=m[3]?+m[3]:null; }
+    if(step<1||step>5) return; const level=this.LEVELS[step-1];
+    const LET2CAT={R:'Reading',W:'Writing',S:'Speaking',L:'Listening'}; const letter=(mods||'').toUpperCase()[0]; const cat=letter&&LET2CAT[letter]?LET2CAT[letter]:null;
+    this.setState(s=>{ const patch={level}; if(cat) patch.categories=[cat];
+      let exs = s.exercises.map(e=> e.id===id ? {...e, ...patch} : e);
+      const moved=exs.find(e=>e.id===id); if(!moved) return {};
+      const group=this.orderedGroup(exs, moved.level).filter(e=>e.id!==id);
+      let idx = pos? Math.min(Math.max(1,pos)-1, group.length) : group.length; group.splice(idx,0,moved);
+      const ords={}; group.forEach((e,i)=> ords[e.id]=i);
+      return { exercises: exs.map(e=> (e.id in ords) ? {...e, ord:ords[e.id]} : e) };
+    }); }
+
+  segBtn(on, accent){ return 'font-size:11.5px;padding:5px 9px;border-radius:6px;font-weight:'+(on?'600':'500')+';color:'+(on? '#0F172A' : '#94A3B8')+';background:'+(on? (accent||'#CBD5E1') : 'transparent')+';white-space:nowrap'; }
+  tabStyle(on){ return 'font-size:13px;padding:6px 14px;border-radius:7px;font-weight:'+(on?'600':'500')+';color:'+(on?'#0F172A':'#94A3B8')+';background:'+(on?'#CBD5E1':'transparent'); }
+  subStyle(on){ return 'font-size:12.5px;padding:6px 14px;border-radius:7px;font-weight:'+(on?'600':'500')+';color:'+(on?'#F1F5F9':'#64748B')+';background:'+(on?'#334155':'transparent')+';border:1px solid '+(on?'#475569':'transparent'); }
+  navStyle(on){ return 'font-size:13px;padding:7px 15px;border-radius:8px;font-weight:'+(on?'600':'500')+';color:'+(on?'#0F172A':'#94A3B8')+';background:'+(on?'#CBD5E1':'transparent'); }
+  bandFromY(yp){ const Y={Meet:9,Recognize:29.5,Recall:50,Produce:70.5,Perform:91}; let best='Meet',bd=1e9; for(const k in Y){ const d=Math.abs(Y[k]-yp); if(d<bd){bd=d;best=k;} } return best; }
+
+  renderVals(){
+    const s = this.state;
+    const exs = s.exercises;
+    const C = this.CATS;
+
+    const stats = { total: exs.length, on: exs.filter(e=>e.active!==false).length, off: exs.filter(e=>e.active===false).length };
+
+    // ---- inventory ----
+    const filtered = exs.filter(e =>
+      (s.filterCat==='all' || e.categories.includes(s.filterCat)) &&
+      (s.filterLevel==='all' || e.level===s.filterLevel) &&
+      (s.filterCap==='all' || (s.filterCap==='on' ? e.active!==false : e.active===false)) &&
+      (s.filterFamily==='all' || this.famOf(e)===s.filterFamily) &&
+      (s.filterKind==='all' || this.axVal(e,'kind')===s.filterKind) &&
+      (s.filterGraded==='all' || this.axVal(e,'graded')===s.filterGraded) &&
+      (s.filterCp==='all' || this.axVal(e,'cp')===s.filterCp) &&
+      (s.filterScaffold==='all' || this.axVal(e,'scaffold')===s.filterScaffold)
+    );
+    const codes = this.computeCodes(this.state.exercises);
+    const rowVM = (e)=>{
+      const ph = e.active===false;
+      const pc = C[e.categories[0]];
+      const famOn = s.focusFamily && this.famOf(e)===s.focusFamily;
+      const off = e.active===false;
+      return {
+        ...e,
+        off, isActive: !off,
+        onToggleActive:()=>this.updateEx(e.id,{active: e.active===false}),
+        activeLabel: off ? '○ off' : '● on',
+        activeStyle:'flex-shrink:0;font-size:11px;font-weight:600;padding:4px 11px;border-radius:999px;cursor:pointer;border:1px solid '+(off?'#334155':'#2F5D4A')+';color:'+(off?'#64748B':'#6EE7B7')+';background:'+(off?'transparent':'rgba(110,231,183,.08)'),
+        onCode:(ev)=>this.applyCode(e.id, ev.target.value),
+        code: codes[e.id],
+        kindCore: e.kind!=='support',
+        onToggleKind:()=>this.updateEx(e.id,{kind: e.kind==='support'?'core':'support'}),
+        kindLabel: e.kind==='support' ? 'support' : 'core',
+        kindStyle:'flex-shrink:0;font-size:11px;font-weight:600;padding:5px 11px;border-radius:7px;cursor:pointer;border:1px solid '+(e.kind==='support'?'#475569':'#2F5D4A')+';color:'+(e.kind==='support'?'#94A3B8':'#6EE7B7')+';background:'+(e.kind==='support'?'transparent':'rgba(110,231,183,.08)'),
+        mech: this.mechanicOf(e), family: this.famOf(e),
+        famActive: famOn, onFamily:()=>this.toggleFamily(this.famOf(e)),
+        famChipStyle: 'font-size:10.5px;font-weight:600;padding:3px 10px;border-radius:999px;cursor:pointer;border:1px solid '+(famOn?'#6EE7B7':'#334155')+';color:'+(famOn?'#6EE7B7':'#94A3B8')+';background:'+(famOn?'rgba(110,231,183,.1)':'transparent'),
+        isStep: e.nodeType==='step', isSimple: e.nodeType!=='step',
+        practiceLabel: e.nodeType==='step' ? '▶ Walk rotation' : '▶ Practice',
+        onPractice: e.nodeType==='step' ? (()=>this.startPracticeStepNode(e)) : (()=>this.practiceOne(e.id)),
+        rotationText: this.stepMods(e).join(' → ') || '—',
+        scaffoldBandLabel: this.bandLabel(e.support),
+        modState: this.MODORDER.map(m=>{ const active=(e.mods||[]).includes(m); const col=C[this.MODCAT[m]]; const mech=this.mechForMod(m,e.support);
+          return { m, letter:this.MODLETTER[m], active, mechName:(active? (this.FAMILY[mech]||mech) : 'add'), onClick:()=>this.toggleMod(e.id,m),
+            chipStyle:'display:flex;flex-direction:column;gap:3px;align-items:center;min-width:66px;padding:7px 8px;border-radius:8px;border:1px solid '+(active?col:'#334155')+';background:'+(active?'#0F172A':'transparent')+';opacity:'+(active?1:0.55),
+            letterStyle:'font-size:13px;font-weight:700;color:'+(active?col:'#475569'),
+            nameStyle:'font-size:9px;color:'+(active?'#94A3B8':'#475569') }; }),
+        isNotStep: e.nodeType!=='step',
+        onFindMatrix:()=>this.findIn('matrix', e.id),
+        onFindRoadmap:()=>this.findIn('roadmap', e.id),
+        stop: (ev)=>ev.stopPropagation(),
+        isPlaceholder: ph,
+        supportLabel: e.support+'%',
+        demandLabel: e.demand,
+        cardStyle: 'background:#1E293B;border:1px solid '+(famOn?'#6EE7B7':(ph?'#3a3050':'#334155'))+';border-radius:12px;padding:15px 17px;'+(famOn?'box-shadow:0 0 0 2px rgba(110,231,183,.2);':'')+(ph?'opacity:.62;border-style:dashed':'')+(off?';opacity:.4':''),
+        dotStyle: 'width:11px;height:11px;border-radius:50%;flex-shrink:0;background:'+pc+(e.categories.length>1?';box-shadow:0 0 0 2px #1E293B, 4px 0 0 -1px '+C[e.categories[1]]:''),
+        capLabel: e.graded ? 'auto-graded' : 'self-mark',
+        capStyle: 'font-size:11.5px;padding:5px 11px;border-radius:7px;font-weight:600;'+(
+          e.graded ? 'color:#0F172A;background:#34D399'
+          : 'color:#CBD5E1;border:1px solid #475569;background:transparent'),
+        catState: this.CATORDER.map(c=>({ c, onClick:()=>this.toggleCat(e.id,c),
+          chipStyle:'font-size:11px;padding:4px 9px;border-radius:6px;font-weight:600;border:1px solid '+(e.categories.includes(c)?C[c]:'#334155')+';color:'+(e.categories.includes(c)?'#0F172A':'#64748B')+';background:'+(e.categories.includes(c)?C[c]:'transparent') })),
+        levelState: this.LEVELS.map(l=>({ l, onClick:()=>this.updateEx(e.id,{level:l}), style:this.segBtn(e.level===l) })),
+        cpState: ['none','self'].map(c=>({ c, onClick:()=>this.updateEx(e.id,{cp:c, gates: c==='none'?null:e.gates}), style:this.segBtn(e.cp===c) })),
+        onName:(ev)=>this.updateEx(e.id,{name:ev.target.value}),
+        onSpec:(ev)=>this.updateEx(e.id,{spec:ev.target.value}),
+        onNotes:(ev)=>this.updateEx(e.id,{notes:ev.target.value}),
+        onSupport:(ev)=>this.updateEx(e.id,{support:+ev.target.value}),
+        onDemand:(ev)=>this.updateEx(e.id,{demand:+ev.target.value}),
+        onCap:()=>this.updateEx(e.id,{graded:!e.graded}),
+        onDel:()=>this.setState({confirmDelete:e.id}),
+      };
+    };
+    const SORTERS={
+      order:(a,b)=> (codes[a.id]<codes[b.id]?-1:codes[a.id]>codes[b.id]?1:0),
+      az:(a,b)=> a.name.localeCompare(b.name),
+      za:(a,b)=> b.name.localeCompare(a.name),
+      modAsc:(a,b)=> this.CATORDER.indexOf(a.categories[0])-this.CATORDER.indexOf(b.categories[0]) || (codes[a.id]<codes[b.id]?-1:1),
+      modDesc:(a,b)=> this.CATORDER.indexOf(b.categories[0])-this.CATORDER.indexOf(a.categories[0]) || (codes[a.id]<codes[b.id]?-1:1),
+      levelAsc:(a,b)=> this.LEVELNUM[a.level]-this.LEVELNUM[b.level] || (codes[a.id]<codes[b.id]?-1:1),
+      levelDesc:(a,b)=> this.LEVELNUM[b.level]-this.LEVELNUM[a.level] || (codes[a.id]<codes[b.id]?-1:1),
+      family:(a,b)=> this.famOf(a).localeCompare(this.famOf(b)) || this.LEVELNUM[a.level]-this.LEVELNUM[b.level],
+      kind:(a,b)=> this.axVal(a,'kind').localeCompare(this.axVal(b,'kind')) || (codes[a.id]<codes[b.id]?-1:1),
+      graded:(a,b)=> this.axVal(b,'graded').localeCompare(this.axVal(a,'graded')) || (codes[a.id]<codes[b.id]?-1:1),
+      cp:(a,b)=> ['hard','self','none'].indexOf(this.axVal(a,'cp'))-['hard','self','none'].indexOf(this.axVal(b,'cp')) || (codes[a.id]<codes[b.id]?-1:1),
+      status:(a,b)=> this.axVal(a,'status').localeCompare(this.axVal(b,'status')) || (codes[a.id]<codes[b.id]?-1:1),
+      supportAsc:(a,b)=> (+a.support||0)-(+b.support||0),
+      supportDesc:(a,b)=> (+b.support||0)-(+a.support||0),
+      demandAsc:(a,b)=> (+a.demand||0)-(+b.demand||0),
+      demandDesc:(a,b)=> (+b.demand||0)-(+a.demand||0),
+    };
+    const inventory = [...filtered].sort(SORTERS[s.sortBy]||SORTERS.order).map(rowVM);
+    const detail = s.selected ? rowVM(exs.find(x=>x.id===s.selected)) : null;
+
+    // ---- matrix (any property on either axis) ----
+    const mx = s.mx||'category', my = s.my||'level';
+    const xVals = this.axDomain(mx, exs);
+    let yVals = this.axDomain(my, exs); if(my==='level') yVals = yVals.slice().reverse();
+    const matrixCols = xVals.map(v=>{ const col=this.axColor(mx,v); const dim = mx==='category' && v==='Listening';
+      return { cat:v, color:col, headStyle:'font-size:12px;font-weight:600;color:'+(dim?'#64748B':'#CBD5E1')+';padding:8px 4px;border-bottom:2px '+(dim?'dashed #475569':'solid '+col)+';'+(dim?'opacity:.7':'') }; });
+    const catLegend = this.CATORDER.map(cat=>({ cat, color:C[cat] }));
+    const mxHeadGrid = 'flex:1;display:grid;grid-template-columns:repeat('+Math.max(1,xVals.length)+',1fr);gap:10px';
+    const mxRowGrid = mxHeadGrid+';padding:6px 0';
+    const rungOf = { Meet:'01', Recognize:'02', Recall:'03', Produce:'04', Perform:'05' };
+    const stripes = [];
+    yVals.forEach((yv, i)=>{
+      const cells = xVals.map(xv=>{
+        const cellExs = filtered.filter(e=> this.axVal(e,mx)===xv && this.axVal(e,my)===yv)
+          .sort((a,b)=> this.ordVal(a)-this.ordVal(b) || this.familyOf(a).localeCompare(this.familyOf(b)) || a.demand-b.demand).map(e=>{
+          const ph = e.active===false; const foc = s.focusId===e.id || (s.focusFamily && this.famOf(e)===s.focusFamily); const off=e.active===false;
+          const patch = Object.assign({}, this.axPatch(mx,xv)||{}, this.axPatch(my,yv)||{});
+          return { id:e.id, code:codes[e.id], onClick:()=>this.setState({selected:e.id}), name:e.name, cpHard:e.cp==='hard', cpSelf:e.cp==='self',
+            isStep:e.nodeType==='step', rot:this.stepMods(e).map(m=>this.MODLETTER[m]).join('·'),
+            draggable:true, onDragStart:(ev)=>{ this.setState({dragId:e.id}); try{ev.dataTransfer.effectAllowed='move';ev.dataTransfer.setData('text/plain',e.id);}catch(_){} },
+            onDragOver:(ev)=>ev.preventDefault(), onDrop:(ev)=>{ ev.preventDefault(); ev.stopPropagation(); const id=this.state.dragId; if(id&&id!==e.id) this.reorder(id,patch,e.id); },
+            chipStyle:'display:flex;align-items:center;gap:6px;font-size:11.5px;padding:7px 9px;border-radius:7px;margin-bottom:5px;cursor:grab;color:'+(ph?'#94A3B8':'#E2E8F0')+';background:'+(foc?'#1c2e22':(ph?'transparent':'#0F172A'))+';border:1px '+(foc?'solid #6EE7B7':(ph?'dashed #475569':'solid #334155'))+';'+(foc?'box-shadow:0 0 0 2px rgba(110,231,183,.25);':'')+(ph?'opacity:.6':'')+(off?';opacity:.4':'') };
+        });
+        const dropPatch = Object.assign({}, this.axPatch(mx,xv)||{}, this.axPatch(my,yv)||{});
+        return { exs:cellExs, empty:cellExs.length===0, wrapStyle:'min-height:42px;display:flex;flex-direction:column;justify-content:center',
+          onDragOver:(ev)=>ev.preventDefault(), onDrop:(ev)=>{ ev.preventDefault(); const id=this.state.dragId; if(id) this.reorder(id,dropPatch,null); } };
+      });
+      const n = cells.reduce((t,c)=>t+c.exs.length,0);
+      stripes.push({ isLevel:true, isCp:false, level:yv, rung: my==='level' ? rungOf[yv] : (n+(n===1?' node':' nodes')), cells });
+      if(my==='level' && i < yVals.length-1){
+        const leaving = yVals[i+1];
+        const marks = [];
+        const soft = marks.length===0;
+        stripes.push({ isLevel:false, isCp:true, cpLabel:'leave '+leaving, marks, cpHasMarks:marks.length>0, cpSoft:soft,
+          cpBandStyle:'flex:1;display:flex;align-items:center;gap:16px;padding:7px 14px;border-radius:8px;border:1px '+(soft?'dashed #334155':'solid #5a4a1e')+';background:'+(soft?'transparent':'rgba(251,191,36,.07)') });
+      }
+    });
+
+    // ---- plane ----
+    const planeDots = exs.map(e=>{
+      const ph = e.active===false;
+      const c0 = C[e.categories[0]];
+      const c1 = e.categories[1] ? C[e.categories[1]] : null;
+      const bg = c1 ? 'linear-gradient(135deg,'+c0+' 0 50%,'+c1+' 50% 100%)' : c0;
+      const left = 5 + e.support*0.90, top = 5 + (100 - e.demand)*0.90;
+      return {
+        name: e.name, code: codes[e.id], isHovered: s.hover===e.id,
+        onEnter:()=>this.setState({hover:e.id}), onLeave:()=>this.setState({hover:null}),
+        onClick:()=>this.setState({selected:e.id}),
+        style:'position:absolute;left:'+left+'%;top:'+top+'%;transform:translate(-50%,-50%);width:17px;height:17px;border-radius:50%;background:'+bg+';border:'+(ph?'1.5px dashed '+c0:'1.5px solid rgba(255,255,255,.28)')+';opacity:'+(ph?0.5:1)+';cursor:pointer;box-shadow:0 1px 5px rgba(0,0,0,.45)',
+      };
+    });
+
+    const opt = (v,label)=>({v,label});
+
+    // ---- roadmap: core spine + support side-loops (a real tree, not a line) ----
+    const MEM = window.MEMORIA || {};
+    const STEP_INTRO = MEM.STEP_INTRO || {};
+    const STEP_BRIDGE = MEM.STEP_BRIDGE || {};
+    const stepLevels = ['Meet','Recognize','Recall','Produce','Perform'];
+    const rowY = { Input:4, Meet:18, Recognize:35, Recall:52, Produce:69, Perform:86 };
+    const stepY = rowY;
+    const bandAccent = { Input:'#64748B', Meet:'#60A5FA', Recognize:'#A78BFA', Recall:'#34D399', Produce:'#FBBF24', Perform:'#F472B6' };
+    const posOf = {};
+    const coreAt = {};
+    const roadNodes = [];
+
+    const pushNode = (e, x, lv, isCore, labDrop)=>{
+      const drop = labDrop||15;
+      const ph=e.active===false; const c0=C[e.categories[0]]; const c1=e.categories[1]?C[e.categories[1]]:null;
+      const foc=s.focusId===e.id || (s.focusFamily && this.famOf(e)===s.focusFamily);
+      const bg=c1?'linear-gradient(135deg,'+c0+' 0 50%,'+c1+' 50% 100%)':c0;
+      const y=rowY[lv]; posOf[e.id]={x,y};
+      const sz=foc?22:(isCore?18:14); const ndRad=isCore?'50%':'3px';
+      const ring = foc ? 'border:2px solid #6EE7B7;box-shadow:0 0 0 4px rgba(110,231,183,.3)'
+        : (isCore ? 'border:2px solid rgba(255,255,255,.6);box-shadow:0 1px 5px rgba(0,0,0,.4)' : 'border:1.5px '+(ph?'dashed '+c0:'dashed rgba(255,255,255,.4)'));
+      roadNodes.push({ id:e.id, code:codes[e.id], name:e.name, family:this.famOf(e)+(isCore?' · core':' · support'), isHovered:s.hover===e.id, ph, isInput:false,
+        draggable:true, onDragStart:(ev)=>{ this.setState({dragId:e.id}); try{ev.dataTransfer.effectAllowed='move';ev.dataTransfer.setData('text/plain',e.id);}catch(_){} },
+        onClick:()=>this.setState({selected:e.id}), onEnter:()=>this.setState({hover:e.id}), onLeave:()=>this.setState({hover:null}),
+        dotStyle:'position:absolute;left:'+x+'%;top:'+y+'%;transform:translate(-50%,-50%);width:'+sz+'px;height:'+sz+'px;border-radius:'+ndRad+';background:'+bg+';cursor:pointer;z-index:'+(foc?5:3)+';'+ring+';opacity:'+(ph?0.4:1),
+        labelStyle:'position:absolute;left:'+x+'%;top:calc('+y+'% + '+drop+'px);transform:translateX(-50%);z-index:2;white-space:nowrap;font-size:10px;font-weight:'+(foc?'700':'600')+';text-align:center;color:'+(foc?'#6EE7B7':(ph?'#64748B':(isCore?'#E2E8F0':'#94A3B8')))+';pointer-events:none' });
+    };
+
+    // step 0 — input text (root of the tree)
+    posOf['input']={x:50,y:rowY.Input};
+    roadNodes.push({ id:'input', code:'0', name:'Input text', family:'the raw passage · step 0', isHovered:s.hover==='input', ph:false, isInput:true,
+      draggable:false, onDragStart:(ev)=>{}, onClick:()=>{}, onEnter:()=>this.setState({hover:'input'}), onLeave:()=>this.setState({hover:null}),
+      dotStyle:'position:absolute;left:50%;top:'+rowY.Input+'%;transform:translate(-50%,-50%);width:34px;height:20px;border-radius:5px;background:#1E293B;border:1.5px solid #64748B;cursor:default;z-index:3',
+      labelStyle:'position:absolute;left:50%;top:calc('+rowY.Input+'% + 16px);transform:translateX(-50%);z-index:2;white-space:nowrap;font-size:10px;font-weight:600;text-align:center;color:#94A3B8;pointer-events:none' });
+
+    stepLevels.forEach(lv=>{
+      const inLv = filtered.filter(e=>e.level===lv).sort((a,b)=> this.ordVal(a)-this.ordVal(b) || a.demand-b.demand);
+      const cores = inLv.filter(e=> e.kind!=='support' && e.active!==false);   // active core = the spine
+      const sides = inLv.filter(e=> !(e.kind!=='support' && e.active!==false)); // supports + parked-off cores
+      coreAt[lv]=cores.map(e=>e.id);
+      cores.forEach((e,i)=>{ const n=cores.length; const x = n<=1?50 : 44+(i*(12/(n-1))); pushNode(e,x,lv,true, 15+(i%2)*15); });
+      sides.forEach((e,i)=>{ const side=i%2===0?-1:1; const tier=Math.floor(i/2); const x=Math.max(6,Math.min(94, 50+side*(30+tier*11))); pushNode(e,x,lv, e.kind!=='support', 15+tier*15); });
+    });
+
+    // edges: solid spine (must-pass) + dashed support loops back into a core
+    const edgeList=[];
+    (coreAt['Meet']||[]).forEach(cid=> edgeList.push({from:'input',to:cid,type:'spine'}));
+    for(let i=0;i<stepLevels.length-1;i++){ const L=stepLevels[i], Ln=stepLevels[i+1];
+      (coreAt[L]||[]).forEach(a=> (coreAt[Ln]||[]).forEach(b=> edgeList.push({from:a,to:b,type:'spine'}))); }
+    stepLevels.forEach(lv=>{ const cs=coreAt[lv]||[]; if(!cs.length) return; const target=cs[0];
+      filtered.filter(e=>e.level===lv && !(e.kind!=='support' && e.active!==false)).forEach(sp=> edgeList.push({from:sp.id,to:target,type:'support'})); });
+    const roadEdges = edgeList.map(ed=>{ const a=posOf[ed.from], b=posOf[ed.to]; if(!a||!b) return null;
+      const sup=ed.type==='support';
+      return { x1:a.x+'%', y1:a.y+'%', x2:b.x+'%', y2:b.y+'%', stroke: sup?'#475569':'#3A5070', op: sup?'0.5':'0.6', w: sup?'1':'1.6', dash: sup?'3 4':'0' }; }).filter(Boolean);
+
+    // family threads — same tool recurring across levels (e.g. Speed-read support)
+    const famMap={}; exs.forEach(e=>{ const f=this.famOf(e); (famMap[f]=famMap[f]||[]).push(e); });
+    const famEdges=[]; const recurringFamilies=[];
+    Object.keys(famMap).forEach(f=>{ const arr=famMap[f].slice().sort((a,b)=>this.LEVELNUM[a.level]-this.LEVELNUM[b.level]);
+      const levels=new Set(arr.map(a=>a.level));
+      if(levels.size>1){ recurringFamilies.push({ name:f, count:arr.length, span:[...levels].join(' → '), color:C[arr[0].categories[0]] });
+        for(let i=0;i<arr.length-1;i++){ const a=posOf[arr[i].id], b=posOf[arr[i+1].id]; if(a&&b) famEdges.push({ x1:a.x+'%',y1:a.y+'%',x2:b.x+'%',y2:b.y+'%', color:C[arr[0].categories[0]] }); } } });
+
+    // left rail (incl. step 0) + bridge labels between steps
+    const roadSteps = [{ level:'Input', num:'0', accent:bandAccent.Input, topPct:rowY.Input+'%', intro:(MEM.INPUT_NOTE||'The raw text. Everything branches from here.'), bridge:'', hasBridge:false, canAdd:false }]
+      .concat(stepLevels.map(lv=>({ level:lv, num:String(this.LEVELNUM[lv]), accent:bandAccent[lv], topPct:rowY[lv]+'%',
+        intro:STEP_INTRO[lv]||this.LEVELDESC[lv]||'', bridge:STEP_BRIDGE[lv]||'', hasBridge:!!(STEP_BRIDGE[lv]), canAdd:true, onAdd:()=>this.addExAtLevel(lv) })));
+    const briefBridge=(lv)=>{ const t=STEP_BRIDGE[lv]||''; return (t.split(/[\u2014.]/)[0]||'').trim(); };
+    const roadBridges=[{ y:((rowY.Input+rowY.Meet)/2)+'%', label:'⇣ paste & section the text' }];
+    ['Meet','Recognize','Recall','Produce'].forEach(lv=>{ const next=stepLevels[stepLevels.indexOf(lv)+1]; const t=briefBridge(lv); if(t) roadBridges.push({ y:((rowY[lv]+rowY[next])/2)+'%', label:'⇣ '+t }); });
+    const hasRecurring = recurringFamilies.length>0;
+
+    // ---- family-tree view: one family = one exercise rising in scaffold across steps ----
+    const familyTree = Object.keys(famMap).map(f=>{
+      const arr=famMap[f].slice().sort((a,b)=>this.LEVELNUM[a.level]-this.LEVELNUM[b.level]||(codes[a.id]>codes[b.id]?1:-1));
+      const col=C[arr[0].categories[0]];
+      return { name:f, color:col, count:arr.length,
+        span:[...new Set(arr.map(a=>a.level))].join(' → '),
+        items: arr.map(e=>({ code:codes[e.id], name:e.name, stepLabel:'Step '+this.LEVELNUM[e.level]+' · '+e.level,
+          onClick:()=>this.setState({selected:e.id, focusFamily:null}),
+          chipStyle:'display:flex;flex-direction:column;gap:2px;padding:8px 11px;border-radius:9px;cursor:pointer;background:#0F172A;border:1px '+(e.active===false?'dashed #475569':'solid '+col)+';'+(e.active===false?'opacity:.7':'') })) };
+    }).sort((a,b)=> b.count-a.count || a.name.localeCompare(b.name));
+
+    // ---- freedom simulator: what a learner may CHOOSE when they open a section ----
+    const fStage = s.freedomStage || 'Recall'; const fNum = this.LEVELNUM[fStage];
+    const freedomStepper = this.LEVELS.map(l=>({ l, onClick:()=>this.setState({freedomStage:l}),
+      style:'font-size:12px;padding:6px 12px;border-radius:7px;font-weight:'+(fStage===l?'700':'500')+';white-space:nowrap;color:'+(fStage===l?'#0F172A':'#94A3B8')+';background:'+(fStage===l?this.LEVELACCENT[l]:'transparent') }));
+    const fAvail = exs.filter(e=> e.active!==false && this.LEVELNUM[e.level] <= fNum)
+      .sort((a,b)=> this.LEVELNUM[a.level]-this.LEVELNUM[b.level] || this.ordVal(a)-this.ordVal(b) || a.demand-b.demand);
+    const freedomOptions = fAvail.map(e=>{ const isNew=e.level===fStage; const c0=C[e.categories[0]];
+      return { code:codes[e.id], name:e.name, isNew, levelLabel:e.level, onClick:()=>this.practiceOne(e.id),
+        chipStyle:'display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:9px;cursor:pointer;font-size:12.5px;color:#E2E8F0;background:'+(isNew?'#15243B':'#0F172A')+';border:1px solid '+(isNew?'#2F5D4A':'#334155'),
+        dotStyle:'width:8px;height:8px;border-radius:50%;flex-shrink:0;background:'+c0,
+        tagStyle:'font-family:\'Space Mono\',monospace;font-size:10px;color:#64748B' }; });
+    const lockedNext = (fNum<5) ? exs.filter(e=> e.active!==false && this.LEVELNUM[e.level]===fNum+1).length : 0;
+    const freedom = { stage:fStage, stepper:freedomStepper, options:freedomOptions, count:freedomOptions.length,
+      newCount: freedomOptions.filter(o=>o.isNew).length, text:s.sampleText,
+      lockedLabel: fNum<5 ? (this.LEVELS[fNum]+' is still locked — '+lockedNext+' exercise'+(lockedNext===1?'':'s')+' waiting behind the next checkpoint') : 'Top of the climb — the whole library is open' };
+    const roadBlurb = s.roadMode==='climb' ? 'A real tree: a solid core spine you must pass to climb, with dashed support loops (speed-read, hear-it…) that feed back into a core when a section is shaky. Step 0 is the input text. Drag sideways to reorder sub-steps, across bands to re-level.'
+      : s.roadMode==='family' ? 'Each family is one exercise rising in scaffold across steps. Tap an instance to open it.'
+      : 'The menu a learner sees when they open a section — and how it grows as the floor rises. Pick a stage to feel the freedom unlock.';
+
+    // ---- practice simulation ----
+    let practiceVM = null;
+    if(s.practice){
+      const p=s.practice; const item=p.queue[p.idx]; const cur = (typeof item==='string') ? exs.find(x=>x.id===item) : item;
+      if(cur){
+        const mech=this.mechanicOf(cur); const sub=s.psub||{}; const wds=this.words(s.sampleText);
+        const isFirst = mech==='firstLetters'||mech==='reciteFL';
+        const isAudio = mech==='audio'||mech==='audioMic'||mech==='audioType';
+        const vm={ name:cur.name, code: codes[cur.id] || codes[(cur.id||'').split('#')[0]] || '', level:cur.level, mech, family:this.familyOf(cur),
+          catColor:C[cur.categories[0]], cats:cur.categories.join(' · '), spec:cur.spec, ph:cur.active===false,
+          stepLabel:(cur._mod? cur._mod+' · ':'')+(p.idx+1)+' / '+p.queue.length, isSeq:p.queue.length>1, hasPrev:p.idx>0, hasNext:p.idx<p.queue.length-1,
+          onPrev:()=>this.practiceStep(-1), onNext:()=>this.practiceStep(1), onClose:()=>this.closePractice(), stop:(ev)=>ev.stopPropagation(),
+          sampleText:s.sampleText,
+          isRead: mech==='read'||mech==='readAloud', readAloud: mech==='readAloud',
+          isRsvp: mech==='rsvp', isCloze: mech==='cloze', isFirst, reciteAloud: mech==='reciteFL',
+          isType: mech==='typeAlong', isProduce: mech==='produceCold', isPerform: mech==='performCold', isCue: mech==='cueLines', isAudio,
+          audioNote: mech==='audio'?'Needs a text-to-speech engine — placeholder. The passage below is what would be read aloud.':(mech==='audioMic'?'Needs TTS + microphone — placeholder. Hear a line, echo it back.':'Needs TTS — placeholder. Type what you hear.') };
+        if(vm.isRsvp){ const i=Math.min(sub.rsvpIdx||0, Math.max(0,wds.length-1)); vm.rsvpWord=wds[i]||'—'; vm.rsvpProgress=Math.round((i+1)/Math.max(1,wds.length)*100)+'%'; vm.rsvpCount=(i+1)+' / '+wds.length; vm.rsvpPlayLabel=sub.rsvpPlaying?'⏸ Pause':'▶ Play'; vm.onRsvpToggle=()=>this.toggleRsvp(wds.length); vm.onRsvpReset=()=>this.rsvpReset();
+          vm.rsvpDiff=sub.rsvpDiff!=null?sub.rsvpDiff:40; vm.rsvpWpm=this.PARAM_WPM(vm.rsvpDiff); vm.onRsvpSpeed=(ev)=>this.setRsvpDiff(wds.length, ev.target.value); }
+        if(vm.isCloze){ const pct=(sub.clozePct!=null)? sub.clozePct : this.clozePctOf(cur); vm.clozePct=pct+'%'; vm.clozeDiff=pct; vm.onClozeDiff=(ev)=>this.setClozePct(ev.target.value); let bi=0;
+          vm.clozeTokens=wds.map((w,wi)=>{ const clean=w.replace(/[^A-Za-z]/g,''); const eligible=clean.length>2; if(eligible) bi++; const isBlank= eligible && ((bi*73)%100) < pct;
+            if(!isBlank) return {isBlank:false, isWord:true, w:w+' '};
+            const val=(sub.clozeVals||{})[wi]||''; const ok=sub.clozeChecked && val.trim().toLowerCase()===clean.toLowerCase(); const bad=sub.clozeChecked && !ok;
+            return {isBlank:true, value:val, width:Math.max(46,clean.length*11)+'px', onInput:(ev)=>{ const v=ev.target.value; this.setSub({clozeVals:{...(this.state.psub.clozeVals||{}),[wi]:v}}); },
+              bd: ok?'#34D399':(bad?'#F87171':'#475569'), col: ok?'#34D399':(bad?'#F87171':'#F1F5F9') }; });
+          vm.clozeChecked=!!sub.clozeChecked; vm.onClozeCheck=()=>this.setSub({clozeChecked:true}); vm.onClozeReset=()=>this.setSub({clozeVals:{},clozeChecked:false}); }
+        if(vm.isFirst){ vm.revealed=!!sub.revealed; vm.onReveal=()=>this.setSub({revealed:!this.state.psub.revealed});
+          vm.firstTokens=wds.map(w=>{ const fl=(w.match(/[A-Za-z]/)||[w[0]])[0]; const rest=Math.max(0,w.replace(/[^A-Za-z]/g,'').length-1); return { scaffold: fl+'·'.repeat(rest), full:w }; }); }
+        if(vm.isCue){ const sents=(s.sampleText||'').split(/(?<=[.!?])\s+/).filter(x=>x.trim()); vm.revealed=!!sub.revealed; vm.onReveal=()=>this.setSub({revealed:!this.state.psub.revealed});
+          vm.cueLines=sents.map(sn=>{ const w=this.words(sn); return { cue:w.slice(0,2).join(' ')+' …', full:sn }; }); }
+        if(vm.isType){ vm.typed=sub.typed||''; vm.onTyped=(ev)=>this.setSub({typed:ev.target.value}); }
+        if(vm.isProduce){ vm.typed=sub.typed||''; vm.onTyped=(ev)=>this.setSub({typed:ev.target.value}); vm.revealed=!!sub.revealed; vm.onReveal=()=>this.setSub({revealed:!this.state.psub.revealed}); }
+        if(vm.isPerform){ vm.revealed=!!sub.revealed; vm.onReveal=()=>this.setSub({revealed:!this.state.psub.revealed}); }
+        if(vm.revealed!==undefined){ vm.notRevealed=!vm.revealed; vm.revealLabel=vm.revealed?'Hide text':'Reveal text'; }
+        vm.prevOpacity = p.idx>0?1:0.35; vm.nextOpacity = p.idx<p.queue.length-1?1:0.35;
+        practiceVM=vm;
+      }
+    }
+    const onSampleText=(ev)=>this.setState({sampleText:ev.target.value});
+
+    return {
+      theme:'dark', stats,
+      isTable: s.view==='table', invMatrix: s.view==='matrix', isRoadmapV: s.view==='roadmap', isArch: !!s.readme,
+      isDataView: s.view==='table'||s.view==='matrix',
+      navItems: [['roadmap','Roadmap'],['table','Table'],['matrix','Matrix']].map(n=>({ label:n[1], onClick:()=>this.setState({view:n[0]}), style:this.navStyle(s.view===n[0]) })),
+      onReadme:()=>this.setState({readme:!s.readme}),
+      readmeLabel: s.readme ? '▾ ReadMe' : '▸ ReadMe',
+      readmeBtnStyle:'margin-top:10px;font-size:11.5px;font-weight:600;letter-spacing:.04em;padding:5px 12px;border-radius:8px;border:1px solid '+(s.readme?'#2F5D4A':'#334155')+';background:'+(s.readme?'#15243B':'transparent')+';color:'+(s.readme?'#6EE7B7':'#94A3B8'),
+      mxAxis:mx, myAxis:my, mxHeadGrid, mxRowGrid, catLegend,
+      onMxAxis:(e)=>this.setState({mx:e.target.value}),
+      onMyAxis:(e)=>this.setState({my:e.target.value}),
+      onSwapAxes:()=>this.setState({mx:my, my:mx}),
+      axisOpts:this.AXES.map(a=>opt(a[0],a[1])),
+      onRoadOver:(ev)=>ev.preventDefault(),
+      onRoadDrop:(ev)=>{ ev.preventDefault(); const id=this.state.dragId; if(!id) return; const r=ev.currentTarget.getBoundingClientRect(); const xp=(ev.clientX-r.left)/r.width*100; const yp=(ev.clientY-r.top)/r.height*100; const level=this.bandFromY(yp); const others=this.state.exercises.filter(e=>e.id!==id && this.LEVELNUM[e.level]===this.LEVELNUM[level]).sort((a,b)=> this.ordVal(a)-this.ordVal(b) || this.familyOf(a).localeCompare(this.familyOf(b)) || a.demand-b.demand); let beforeId=null; for(let i=0;i<others.length;i++){ if((i+1)/(others.length+1)*100 > xp){ beforeId=others[i].id; break; } } this.reorder(id,{level}, beforeId); },
+      filterCat:s.filterCat, filterLevel:s.filterLevel, filterCap:s.filterCap, filterFamily:s.filterFamily,
+      onFilterCat:(e)=>this.setState({filterCat:e.target.value}),
+      onFilterLevel:(e)=>this.setState({filterLevel:e.target.value}),
+      onFilterCap:(e)=>this.setState({filterCap:e.target.value}),
+      onFilterFamily:(e)=>this.setState({filterFamily:e.target.value}),
+      filterKind:s.filterKind, onFilterKind:(e)=>this.setState({filterKind:e.target.value}),
+      filterGraded:s.filterGraded, onFilterGraded:(e)=>this.setState({filterGraded:e.target.value}),
+      filterCp:s.filterCp, onFilterCp:(e)=>this.setState({filterCp:e.target.value}),
+      filterScaffold:s.filterScaffold, onFilterScaffold:(e)=>this.setState({filterScaffold:e.target.value}),
+      kindFilterOpts:[opt('all','Core + support'),opt('core','Core only'),opt('support','Support only')],
+      gradedFilterOpts:[opt('all','Any grading'),opt('graded','Graded'),opt('ungraded','Ungraded')],
+      cpFilterOpts:[opt('all','Any checkpoint'),opt('none','No checkpoint'),opt('self','Self-mark'),opt('hard','Hard gate')],
+      scaffoldFilterOpts:[opt('all','Any scaffold'),...this.SCAFFOLD_BANDS.map(b=>opt(b,b+' scaffold'))],
+      onClearFilters:()=>this.setState(Object.assign({}, this.CLEARFILTERS)),
+      catFilterOpts:[opt('all','All categories'),...this.CATORDER.map(c=>opt(c,c))],
+      levelFilterOpts:[opt('all','All levels'),...this.LEVELS.map(l=>opt(l,l))],
+      capFilterOpts:[opt('all','All'),opt('on','On'),opt('off','Off')],
+      familyFilterOpts:[opt('all','All families'),...[...new Set(this.state.exercises.map(e=>this.famOf(e)))].sort().map(f=>opt(f,f))],
+      sortBy:s.sortBy, onSortBy:(e)=>this.setState({sortBy:e.target.value}),
+      sortOpts:[opt('order','In order (step)'),opt('az','Name A–Z'),opt('za','Name Z–A'),
+        opt('levelAsc','Level — Meet → Perform'),opt('levelDesc','Level — Perform → Meet'),
+        opt('modAsc','Category R→S'),opt('modDesc','Category S→R'),
+        opt('family','Family'),opt('kind','Core before support'),opt('graded','Graded first'),
+        opt('cp','Checkpoint strength'),opt('status','On before off'),
+        opt('supportDesc','Scaffold — most help first'),opt('supportAsc','Scaffold — least help first'),
+        opt('demandAsc','Demand — low → high'),opt('demandDesc','Demand — high → low')],
+      onAdd:()=>this.addEx(), onAddStep:()=>this.addStep(),
+      inventory, matrixCols, stripes,
+      roadNodes, roadBridges, roadEdges, famEdges, roadSteps, recurringFamilies, hasRecurring,
+      familyTree, freedom, roadBlurb,
+      roadClimb:s.roadMode==='climb', roadFamily:s.roadMode==='family', roadText:s.roadMode==='text',
+      onRoadClimb:()=>this.setState({roadMode:'climb'}), onRoadFamily:()=>this.setState({roadMode:'family'}), onRoadText:()=>this.setState({roadMode:'text'}),
+      segClimb:this.subStyle(s.roadMode==='climb'), segFamily:this.subStyle(s.roadMode==='family'), segText:this.subStyle(s.roadMode==='text'),
+      onPracticeAll:()=>this.practiceAll(),
+      sampleText:s.sampleText, onSampleText,
+      practiceVM, hasPractice: !!practiceVM,
+      detail, hasDetail: !!s.selected, onCloseDetail: ()=>this.setState({selected:null}),
+      invTable: true, invFamily: false,
+      onInvTable:()=>this.setState({invMode:'table'}), onInvMatrix:()=>this.setState({invMode:'matrix'}), onInvFamily:()=>this.setState({invMode:'family'}),
+      segInvTable:this.subStyle(s.invMode==='table'), segInvMatrix:this.subStyle(s.invMode==='matrix'), segInvFamily:this.subStyle(s.invMode==='family'),
+      confirmDelete: !!s.confirmDelete,
+      confirmDeleteName: (exs.find(x=>x.id===s.confirmDelete)||{}).name || 'this exercise',
+      onCancelDelete: ()=>this.setState({confirmDelete:null}),
+      onConfirmDelete: ()=>{ const id=s.confirmDelete; this.setState(st=>({ exercises: st.exercises.filter(e=>e.id!==id), confirmDelete:null, selected: st.selected===id?null:st.selected })); },
+      stopEvt:(ev)=>ev.stopPropagation(),
+    };
+  }
+}
+</script>
+</body>
+</html>
