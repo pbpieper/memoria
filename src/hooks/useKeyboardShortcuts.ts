@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { METHODS } from '@/data/methods'
+import { ACTIVE_TOOLS } from '@/data/methods'
 import type { ToolId } from '@/types/tools'
 import type { Skit } from '@/types/skit'
 
@@ -19,9 +19,9 @@ export function useKeyboardShortcuts({ setActiveTool, skitLibrary, currentSkitId
 
       // 1-9 for tool switching
       const num = parseInt(e.key, 10)
-      if (num >= 1 && num <= 9 && num <= METHODS.length) {
+      if (num >= 1 && num <= 9 && num <= ACTIVE_TOOLS.length) {
         e.preventDefault()
-        setActiveTool(METHODS[num - 1].id)
+        setActiveTool(ACTIVE_TOOLS[num - 1].id)
         return
       }
 

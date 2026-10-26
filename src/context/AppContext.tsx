@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 import type { Skit } from '@/types/skit'
 import type { ToolId } from '@/types/tools'
 import { useServices } from '@/services/ServiceProvider'
+import { toActiveTool } from '@/data/methods'
 import { normalizeSkit } from '@/lib/text'
 
 interface AppContextValue {
@@ -26,8 +27,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const { skitService } = useServices()
   const [skitLibrary, setSkitLibrary] = useState<Skit[]>([])
   const [currentSkitId, setCurrentSkitId] = useState<string>('')
-  const [activeTool, setActiveToolState] = useState<ToolId>('read')
-  const [visited, setVisited] = useState<Set<ToolId>>(new Set(['read']))
+  const [activeTool, setActiveToolState] = useState<ToolId>('studyguide')
+  const [visited, setVisited] = useState<Set<ToolId>>(new Set(['studyguide']))
 
   const refreshLibrary = useCallback(async () => {
     try {
@@ -46,7 +47,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     refreshLibrary()
   }, [refreshLibrary])
 
-  const setActiveTool = useCallback((id: ToolId) => {
+  // Hidden tools can't be opened from anywhere: the day plan, ladder or a shortcut lands on the nearest shown tool
+  const setActiveTool = useCallback((requested: ToolId) => {
+    const id = toActiveTool(requested)
     setActiveToolState(id)
     setVisited(prev => {
       const next = new Set(prev)

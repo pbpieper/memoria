@@ -19,7 +19,7 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
     icon: '📖',
     description: 'Read, understand, and encode the material',
     tools: [
-      { id: 'read', label: 'Read', icon: '📖' },
+      { id: 'read', label: 'Read & Edit', icon: '📖' },
       { id: 'rsvp', label: 'Speed Read', icon: '⚡' },
       { id: 'chunk', label: 'Chunk', icon: '🧱' },
     ],
@@ -73,6 +73,26 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
 
 /** Flat list of all tools across categories */
 export const METHODS: ToolDef[] = TOOL_CATEGORIES.flatMap(c => c.tools)
+
+/**
+ * The tools shown in the app (Patrick, 26 Oct): one row, no categories.
+ * Every other tool keeps its code but is not reachable from the screen;
+ * their ideas are parked in Notion to bring back if they make sense.
+ */
+// 'read' is the editor that saves (full text, Edit → Save, tags). The old 'editor' tool
+// was a text box that never saved, so it is hidden and redirects here.
+export const ACTIVE_TOOL_IDS: ToolId[] = ['studyguide', 'rsvp', 'fill', 'firstletter', 'read']
+export const ACTIVE_TOOLS: ToolDef[] = ACTIVE_TOOL_IDS.map(id => METHODS.find(t => t.id === id)!)
+export const isActiveTool = (id: ToolId) => ACTIVE_TOOL_IDS.includes(id)
+
+/** Where a button that still names a hidden tool (day plan, ladder, shortcuts) now leads. */
+const HIDDEN_TOOL_REDIRECT: Partial<Record<ToolId, ToolId>> = {
+  editor: 'read', chunk: 'read', cue: 'read', loci: 'read', perform: 'read',
+  freewrite: 'fill', flashcard: 'fill',
+  chain: 'firstletter', recall: 'firstletter',
+  map: 'studyguide', dashboard: 'studyguide', future: 'studyguide',
+}
+export const toActiveTool = (id: ToolId): ToolId => (isActiveTool(id) ? id : HIDDEN_TOOL_REDIRECT[id] ?? 'studyguide')
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Tool Combos (legacy — used by MapView)

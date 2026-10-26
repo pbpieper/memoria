@@ -44,9 +44,9 @@ export const STUDY_STEPS: {
   },
   // === PHASE 2: ACTIVE RECALL ===
   {
-    step: 4, title: 'Chunk — Section by Section', tool: 'chunk', icon: '🧱',
+    step: 4, title: 'Chunk — Section by Section', tool: 'read', icon: '🧱',
     difficulty: '🟩 Easy',
-    description: 'Select a single chunk. Read it twice, then click "Hide & Test." Try to recite from memory. Rate yourself honestly. Master each chunk before moving on.',
+    description: 'Take one section at a time. Read it twice, look away and recite it from memory. Rate yourself honestly. Master each section before moving on.',
     tip: 'Working memory holds 7±2 items. Chunking compresses information into manageable units.',
     citation: 'Miller, 1956 — The Magical Number Seven',
   },
@@ -102,7 +102,7 @@ export const STUDY_STEPS: {
     citation: 'LaBerge & Samuels, 1974 — Automatic Processing',
   },
   {
-    step: 12, title: 'Full Recall — Eyes Closed', tool: 'recall', icon: '🏆',
+    step: 12, title: 'Full Recall — Eyes Closed', tool: 'firstletter', icon: '🏆',
     difficulty: '🟥 Expert',
     description: 'Close your eyes (or look away from the screen). Recite the entire text from memory. Use the first letters ONLY if you get stuck. If you can do this, you\'ve mastered it.',
     tip: 'Free recall without cues is the gold standard of memory strength. If you can do this, the text is yours.',
@@ -110,14 +110,14 @@ export const STUDY_STEPS: {
   },
   // === PHASE 5: PERFORM ===
   {
-    step: 13, title: 'Write It Out', tool: 'freewrite', icon: '📝',
+    step: 13, title: 'Write It Out', tool: 'fill', icon: '📝',
     difficulty: '🟪 Performance',
-    description: 'Write out the entire text from memory by hand or typing. Compare against the original. Mark your errors.',
+    description: 'Write out the entire text from memory: in Fill Blank choose Brutal (100%, no hints) and type every word. Your misses show in red; redo the lines you missed.',
     tip: 'Handwriting activates unique neural pathways. Writing from memory is the most demanding — and most effective — form of retrieval practice.',
     citation: 'Mueller & Oppenheimer, 2014 — The Pen Is Mightier',
   },
   {
-    step: 14, title: 'Rehearse in Character', tool: 'perform', icon: '🎭',
+    step: 14, title: 'Rehearse in Character', tool: 'read', icon: '🎭',
     difficulty: '🟪 Performance',
     description: 'Stand up. Deliver the text as if you\'re performing. Use gestures, facial expressions, voice variation. Move through the space. If it\'s a dialogue, switch voices between speakers.',
     tip: 'Embodied cognition: physical movement linked to words creates richer, more durable memory traces. Every great actor rehearses on their feet.',
@@ -131,14 +131,14 @@ export const STUDY_STEPS: {
     citation: 'Driskell et al., 1994 — Mental Practice; Feltz & Landers, 1983',
   },
   {
-    step: 16, title: 'Distraction Test', tool: 'recall', icon: '🌀',
+    step: 16, title: 'Distraction Test', tool: 'firstletter', icon: '🌀',
     difficulty: '🟪 Performance',
     description: 'Do something else for 30 minutes — walk, cook, scroll your phone. Then return and recite from memory cold, without any warm-up. This tests true long-term retention.',
     tip: 'The spacing effect: retrieval after a delay is harder but produces dramatically stronger memories than massed practice.',
     citation: 'Ebbinghaus, 1885 — Spacing Effect; Cepeda et al., 2006',
   },
   {
-    step: 17, title: 'Perform for Someone', tool: 'perform', icon: '🌟',
+    step: 17, title: 'Perform for Someone', tool: 'read', icon: '🌟',
     difficulty: '🟪 Performance',
     description: 'Find an audience — a friend, family member, or your phone camera. Perform the full text from memory. The social pressure of a real audience reveals gaps you didn\'t know existed and cements what you do know.',
     tip: 'Social facilitation theory: the presence of others heightens arousal and performance on well-learned tasks. If you can do it in front of someone, you own it.',
@@ -211,7 +211,7 @@ export function StudyGuide() {
   const { setActiveTool } = useApp()
   const { skitId } = useSkitContext()
 
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(true) // open by default: it is the first tool you land on
   const [openPhases, setOpenPhases] = useState<Record<number, boolean>>({ 1: true })
   const [completed, setCompleted] = useState<Record<number, boolean>>(() => loadGuideProgress(skitId))
 

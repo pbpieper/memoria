@@ -6,7 +6,7 @@ import { useTheme } from '@/design/theme'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { useSessionTracker } from '@/hooks/useSessionTracker'
 import { useServices } from '@/services/ServiceProvider'
-import { METHODS } from '@/data/methods'
+import { ACTIVE_TOOLS } from '@/data/methods'
 import { SEED_SKITS } from '@/data/skits'
 import { decodeSkitFromUrl } from '@/lib/sharing'
 import { TabBar } from '@/components/molecules/TabBar'
@@ -101,10 +101,10 @@ export function AppShell() {
 
   const handleOpenSkit = useCallback((_skit: Skit) => {
     setView('practice')
-    setActiveTool('read')
+    setActiveTool('studyguide')
   }, [setActiveTool])
 
-  const progress = (visited.size / METHODS.length) * 100
+  const progress = (visited.size / ACTIVE_TOOLS.length) * 100
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--color-bg)', fontFamily: 'var(--font-sans)' }}>
@@ -161,7 +161,7 @@ export function AppShell() {
                 <div className="flex-1 h-1 rounded-sm" style={{ background: 'var(--color-gray-200)' }}>
                   <div className="h-1 rounded-sm transition-[width] duration-400" style={{ background: 'var(--color-green-main)', width: `${progress}%` }} />
                 </div>
-                <span className="text-[10px] text-[var(--color-text-secondary)]">{visited.size}/{METHODS.length}</span>
+                <span className="text-[10px] text-[var(--color-text-secondary)]">{visited.size}/{ACTIVE_TOOLS.length}</span>
               </div>
             )}
           </div>
