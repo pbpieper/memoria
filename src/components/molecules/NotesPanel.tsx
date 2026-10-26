@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useApp } from '@/context/AppContext'
+import { useServices } from '@/services/ServiceProvider'
+import { FEEDBACK_MAX_CHARS, type SentNote } from '@/services/types'
 import clsx from 'clsx'
 
 function loadSkitNotes(skitId: string): string {
@@ -21,14 +23,36 @@ function saveAppFeedback(feedback: string): void {
   localStorage.setItem('skit-trainer-feedback', feedback)
 }
 
+
 type Tab = 'skit' | 'app'
 
 export function NotesPanel() {
-  const { currentSkitId } = useApp()
+  const { currentSkitId, activeTool, skitLibrary } = useApp()
+  const { feedbackService } = useServices()
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<Tab>('skit')
   const [notes, setNotes] = useState(() => loadSkitNotes(currentSkitId))
   const [appFeedback, setAppFeedback] = useState(loadAppFeedback)
+  const [sendState, setSendState] = useState<'idle' | 'sending' | 'sent' | 'failed'>('idle')
+  const [sent, setSent] = useState<SentNote[]>(() => feedbackService.history())
+  const tooLong = appFeedback.trim().length > FEEDBACK_MAX_CHARS
+
+  // The draft stays on this device until it is sent; a failed send keeps it
+  const sendFeedback = async () => {
+    const body = appFeedback.trim()
+    if (!body || body.length > FEEDBACK_MAX_CHARS) return
+    setSendState('sending')
+    try {
+      const skitTitle = skitLibrary.find(s => s.id === currentSkitId)?.title
+      await feedbackService.send(body, { tool: activeTool, skitTitle })
+      setSent(feedbackService.history())
+      setAppFeedback('')
+      setSendState('sent')
+    } catch (e) {
+      console.warn('[NotesPanel] feedback not sent:', e)
+      setSendState('failed')
+    }
+  }
 
   // Reload skit notes when skit changes
   useEffect(() => {
@@ -112,13 +136,37 @@ export function NotesPanel() {
                 <>
                   <textarea
                     value={appFeedback}
-                    onChange={e => setAppFeedback(e.target.value)}
+                    onChange={e => { setAppFeedback(e.target.value); if (sendState !== 'sending') setSendState('idle') }}
+                    readOnly={sendState === 'sending'}
                     placeholder="Ideas, bugs, suggestions for the app itself..."
-                    className="w-full min-h-[100px] p-2.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[13px] leading-relaxed text-[var(--color-text)] resize-y focus:outline-none focus:border-[var(--color-pink,#e91e63)]"
+                    className="w-full min-h-[100px] p-2.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[16px] leading-relaxed text-[var(--color-text)] resize-y focus:outline-none focus:border-[var(--color-pink,#e91e63)]"
                   />
-                  <div className="text-[10px] text-[var(--color-text-muted)] mt-1 text-right">
-                    {appFeedback.length} chars &middot; saved locally
+                  <div className="flex items-center justify-between gap-2 mt-1.5">
+                    <span className="text-[10px] text-[var(--color-text-muted)]">
+                      {tooLong ? `Too long to send in one note (${appFeedback.trim().length} / ${FEEDBACK_MAX_CHARS}). Split it in two.`
+                        : sendState === 'sent' ? (feedbackService.central ? 'Sent. Thank you.' : 'Saved on this device.')
+                        : sendState === 'failed' ? "Couldn't send. Your note is still here."
+                        : feedbackService.central ? 'Send adds your note, the tool and the title of the text you are on to the shared feedback list.'
+                        : 'Kept on this device only.'}
+                    </span>
+                    <button
+                      onClick={sendFeedback}
+                      disabled={!appFeedback.trim() || tooLong || sendState === 'sending'}
+                      className="px-3 py-1 rounded-lg border-none bg-[var(--color-pink,#e91e63)] text-white text-[12px] font-semibold cursor-pointer disabled:opacity-40 disabled:cursor-default"
+                    >
+                      {sendState === 'sending' ? 'Sending…' : 'Send'}
+                    </button>
                   </div>
+                  {sent.length > 0 && (
+                    <div className="mt-2 text-[10px] text-[var(--color-text-muted)]">
+                      Sent from this device: {sent.length}
+                      <ul className="mt-1 pl-3 list-disc">
+                        {sent.slice(-3).reverse().map(n => (
+                          <li key={n.at} className="truncate">{new Date(n.at).toLocaleDateString()} · {n.body}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </>
               )}
             </div>

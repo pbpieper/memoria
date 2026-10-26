@@ -55,3 +55,26 @@ export interface ILadderService {
   recordChallengeAttempt(attempt: Omit<ChallengeAttempt, 'id'>): Promise<ChallengeAttempt>
   getChallengeHistory(userId: string, skitId: string): Promise<ChallengeAttempt[]>
 }
+
+/** Where a feedback note was written from, so it can be read later without asking. */
+export interface FeedbackContext {
+  tool?: string
+  skitTitle?: string
+}
+
+/** A note this device sent, kept so the person can see what they already said. */
+export interface SentNote {
+  body: string
+  at: string
+}
+
+/** Longest note the shared list accepts (matches the database check). */
+export const FEEDBACK_MAX_CHARS = 4000
+
+export interface IFeedbackService {
+  /** True when notes reach the shared feedback list; false when they stay on this device. */
+  readonly central: boolean
+  send(body: string, context: FeedbackContext): Promise<void>
+  /** Notes sent from this device, oldest first. */
+  history(): SentNote[]
+}

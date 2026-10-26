@@ -3,6 +3,7 @@ import { useSkitContext } from '@/context/SkitContext'
 import { useProgress } from '@/context/ProgressContext'
 import { SciencePanel } from '@/components/molecules/SciencePanel'
 import { colors } from '@/design/tokens'
+import { wordsOf, PRECISE_TYPING } from '@/lib/words'
 import clsx from 'clsx'
 
 export function ChunkMode() {
@@ -24,13 +25,12 @@ export function ChunkMode() {
   const currentItem = useSubChunks && hasSubs ? subs[subIdx] : chunk
 
   const check = () => {
-    const target = currentItem.lines.map(l => l.text).join(' ').toLowerCase().replace(/[^a-z0-9\s]/g, '')
-    const input = userInput.toLowerCase().replace(/[^a-z0-9\s]/g, '')
-    const tWords = target.split(/\s+/)
-    const iWords = new Set(input.split(/\s+/))
+    // Same words as Fill in the blank: punctuation left out, it's ≠ its, accents count
+    const tWords = wordsOf(currentItem.lines.map(l => l.text).join(' '))
+    const iWords = new Set(wordsOf(userInput))
     let matches = 0
     tWords.forEach(w => { if (iWords.has(w)) matches++ })
-    const score = Math.round((matches / tWords.length) * 100)
+    const score = Math.round((matches / Math.max(1, tWords.length)) * 100)
     setFeedback(score)
     if (score >= 70) {
       if (useSubChunks && hasSubs) {
@@ -110,8 +110,8 @@ export function ChunkMode() {
               {useSubChunks && hasSubs ? `Chunk ${chunk.id}${subs[subIdx].subId}` : `Chunk ${chunk.id}`}: {chunk.label}
             </p>
           </div>
-          <textarea value={userInput} onChange={e => setUserInput(e.target.value)} placeholder="Type from memory..."
-            className="w-full min-h-[100px] p-3.5 rounded-xl border-2 border-[var(--color-green-light)] text-sm resize-y outline-none" style={{ fontFamily: 'inherit' }} />
+          <textarea value={userInput} onChange={e => setUserInput(e.target.value)} placeholder="Type from memory..." {...PRECISE_TYPING}
+            className="w-full min-h-[100px] p-3.5 rounded-xl border-2 border-[var(--color-green-light)] text-[16px] resize-y outline-none" style={{ fontFamily: 'inherit' }} />
           <div className="flex gap-2 mt-2.5">
             <button onClick={check} className="px-5 py-2 rounded-xl border-none bg-[var(--color-pink)] text-white text-[13px] font-bold cursor-pointer">Check</button>
             <button onClick={() => setPhase('study')} className="px-5 py-2 rounded-xl border-none bg-[var(--color-gray-200)] text-[var(--color-gray-700)] text-[13px] font-semibold cursor-pointer">Show text</button>

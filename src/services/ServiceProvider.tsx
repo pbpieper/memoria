@@ -7,6 +7,7 @@ import type {
   IGoalService,
   ITaskService,
   ILadderService,
+  IFeedbackService,
 } from '@/services/types'
 
 // Local implementations
@@ -17,6 +18,7 @@ import { LocalStarService } from '@/services/local/LocalStarService'
 import { LocalGoalService } from '@/services/local/LocalGoalService'
 import { LocalTaskService } from '@/services/local/LocalTaskService'
 import { LocalLadderService } from '@/services/local/LocalLadderService'
+import { LocalFeedbackService } from '@/services/local/LocalFeedbackService'
 
 // Supabase implementations
 import { SupabaseSkitService } from '@/services/supabase/SupabaseSkitService'
@@ -26,6 +28,7 @@ import { SupabaseStarService } from '@/services/supabase/SupabaseStarService'
 import { SupabaseGoalService } from '@/services/supabase/SupabaseGoalService'
 import { SupabaseTaskService } from '@/services/supabase/SupabaseTaskService'
 import { SupabaseLadderService } from '@/services/supabase/SupabaseLadderService'
+import { SupabaseFeedbackService } from '@/services/supabase/SupabaseFeedbackService'
 
 import { isSupabaseAvailable, supabase } from '@/services/supabase/client'
 
@@ -37,6 +40,7 @@ export interface Services {
   goalService: IGoalService
   taskService: ITaskService
   ladderService: ILadderService
+  feedbackService: IFeedbackService
   isOnline: boolean
 }
 
@@ -48,6 +52,11 @@ export function useServices(): Services {
   return ctx
 }
 
+// Feedback reaches the shared list whenever Supabase is configured, signed in or not
+function createFeedbackService(): IFeedbackService {
+  return isSupabaseAvailable ? new SupabaseFeedbackService() : new LocalFeedbackService()
+}
+
 function createLocalServices(): Services {
   return {
     skitService: new LocalSkitService(),
@@ -57,6 +66,7 @@ function createLocalServices(): Services {
     goalService: new LocalGoalService(),
     taskService: new LocalTaskService(),
     ladderService: new LocalLadderService(),
+    feedbackService: createFeedbackService(),
     isOnline: false,
   }
 }
@@ -70,6 +80,7 @@ function createSupabaseServices(): Services {
     goalService: new SupabaseGoalService(),
     taskService: new SupabaseTaskService(),
     ladderService: new SupabaseLadderService(),
+    feedbackService: createFeedbackService(),
     isOnline: true,
   }
 }

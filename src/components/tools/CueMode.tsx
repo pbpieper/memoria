@@ -5,6 +5,7 @@ import { SciencePanel } from '@/components/molecules/SciencePanel'
 import { colors } from '@/design/tokens'
 import type { FlatLine } from '@/types/skit'
 import toast from 'react-hot-toast'
+import { PRECISE_TYPING } from '@/lib/words'
 
 export function CueMode() {
   const { flatLines, speakers } = useSkitContext()
@@ -81,8 +82,8 @@ export function CueMode() {
               </div>
             </div>
           )}
-          <textarea value={input} onChange={e => setInput(e.target.value)} placeholder={`Your line as ${role}...`}
-            className="w-full min-h-[70px] p-3 rounded-xl border-2 border-[var(--color-green-light)] text-sm resize-y outline-none mb-2" style={{ fontFamily: 'inherit' }} />
+          <textarea value={input} onChange={e => setInput(e.target.value)} placeholder={`Your line as ${role}...`} {...PRECISE_TYPING}
+            className="w-full min-h-[70px] p-3 rounded-xl border-2 border-[var(--color-green-light)] text-[16px] resize-y outline-none mb-2" style={{ fontFamily: 'inherit' }} />
           <div className="flex gap-2">
             <button onClick={() => nav(-1)} disabled={lineIdx === 0}
               className="px-4 py-2 rounded-xl border-none bg-[var(--color-gray-100)] text-[var(--color-gray-600)] text-[13px] font-semibold cursor-pointer disabled:opacity-40">← Prev</button>

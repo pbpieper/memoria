@@ -4,6 +4,7 @@ import { SciencePanel } from '@/components/molecules/SciencePanel'
 import { SectionSelect } from '@/components/molecules/SectionSelect'
 import { getLinesForSection } from '@/lib/helpers'
 import { colors } from '@/design/tokens'
+import { splitWords, wordsOf, normalizeAnswer, PRECISE_TYPING } from '@/lib/words'
 import clsx from 'clsx'
 
 const HINT_TYPES = [
@@ -35,8 +36,9 @@ export function FreeWriteMode() {
 
   const score = useMemo(() => {
     if (!checked) return null
-    const targetWords = fullText.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean)
-    const userWords = userText.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean)
+    // Same words as Fill in the blank: punctuation left out, it's ≠ its, accents count
+    const targetWords = wordsOf(fullText)
+    const userWords = wordsOf(userText)
     const userSet = new Set(userWords)
     let hits = 0
     targetWords.forEach(w => { if (userSet.has(w)) hits++ })
@@ -51,9 +53,8 @@ export function FreeWriteMode() {
   const diffLines = useMemo(() => {
     if (!showDiff) return null
     return lines.map(line => {
-      const targetWords = line.text.split(/\s+/)
-      const userLower = userText.toLowerCase().replace(/[^a-z0-9\s]/g, '')
-      return { speaker: line.speaker, words: targetWords.map(w => ({ word: w, found: userLower.includes(w.toLowerCase().replace(/[^a-z0-9]/g, '')) })) }
+      const userSet = new Set(wordsOf(userText))
+      return { speaker: line.speaker, words: splitWords(line.text).map(t => ({ word: t.pre + t.word + t.post, found: !t.word || userSet.has(normalizeAnswer(t.word)) })) }
     })
   }, [showDiff, lines, userText])
 
@@ -107,7 +108,8 @@ export function FreeWriteMode() {
 
       <textarea value={userText} onChange={e => { setUserText(e.target.value); if (checked) { setChecked(false); setShowDiff(false) } }}
         placeholder="Start writing from memory..."
-        className="w-full min-h-[180px] p-4 rounded-xl border-2 text-sm resize-y outline-none leading-relaxed"
+        {...PRECISE_TYPING}
+        className="w-full min-h-[180px] p-4 rounded-xl border-2 text-[16px] resize-y outline-none leading-relaxed"
         style={{ borderColor: checked ? (score && score.wordMatch >= 70 ? colors.correct : colors.incorrect) : colors.greenLight, fontFamily: 'inherit' }}
       />
 

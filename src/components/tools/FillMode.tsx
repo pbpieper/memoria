@@ -4,6 +4,7 @@ import { SciencePanel } from '@/components/molecules/SciencePanel'
 import { GranularitySelector } from '@/components/molecules/GranularitySelector'
 import { getLinesForGranularity } from '@/lib/helpers'
 import { colors } from '@/design/tokens'
+import { splitWords, normalizeAnswer, letterCount, PRECISE_TYPING, type WordToken } from '@/lib/words'
 import clsx from 'clsx'
 
 type AttemptStatus = 'unanswered' | 'wrong-first' | 'wrong-second' | 'revealed' | 'correct'
@@ -43,18 +44,20 @@ export function FillMode() {
   const lines = useMemo(() => getLinesForGranularity(granularity, section, flatLines, macroSections), [granularity, section, flatLines, macroSections])
 
   const tokens = useMemo(() => {
-    const result: Array<{ word: string; lineIdx: number; wordIdx: number; speaker: string; chunkId: number }> = []
+    // Punctuation stays outside the blanks: "addictions," blanks only addictions, "system…but" is two words
+    const result: Array<WordToken & { lineIdx: number; wordIdx: number; speaker: string; chunkId: number }> = []
     lines.forEach((line, li) => {
-      line.text.split(/\s+/).forEach((w, wi) => {
-        result.push({ word: w, lineIdx: li, wordIdx: wi, speaker: line.speaker, chunkId: line.chunkId })
+      splitWords(line.text).forEach((w, wi) => {
+        result.push({ ...w, lineIdx: li, wordIdx: wi, speaker: line.speaker, chunkId: line.chunkId })
       })
     })
     return result
   }, [lines])
 
   const blankSet = useMemo(() => {
-    if (pct === 100) return new Set(tokens.map((_, i) => i))
-    const eligible = tokens.map((_, i) => i).filter(i => tokens[i].word.replace(/[^a-zA-Z]/g, '').length > 2)
+    const words = tokens.map((_, i) => i).filter(i => tokens[i].word !== '')
+    if (pct === 100) return new Set(words)
+    const eligible = words.filter(i => letterCount(tokens[i].word) > 2)
     const shuffled = [...eligible].sort(() => Math.random() - 0.5)
     return new Set(shuffled.slice(0, Math.ceil(eligible.length * (pct / 100))))
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -62,8 +65,8 @@ export function FillMode() {
 
   const blankKeys = useMemo(() => tokens.map((_, i) => i).filter(i => blankSet.has(i)), [tokens, blankSet])
 
-  const normalize = (s: string) => (s || '').trim().replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
-  const isCorrect = (idx: number) => normalize(tokens[idx].word) === normalize(answers[idx] || '')
+  // Exact word: only capital letters and the kind of apostrophe are forgiven (it's ≠ its)
+  const isCorrect = (idx: number) => normalizeAnswer(tokens[idx].word) === normalizeAnswer(answers[idx] || '')
 
   const getAttemptStatus = (idx: number): AttemptStatus => {
     if (revealed.has(idx)) return 'revealed'
@@ -119,8 +122,8 @@ export function FillMode() {
 
   const getHint = (idx: number) => {
     const t = tokens[idx]
-    if (hintType === 'wordcount') return `${t.word.length}`
-    if (hintType === 'firstletter') return t.word.charAt(0)
+    if (hintType === 'wordcount') return `${[...t.word].length}`
+    if (hintType === 'firstletter') return [...t.word][0] ?? ''
     return '·'
   }
 
@@ -240,7 +243,8 @@ export function FillMode() {
             }
 
             return (
-              <div key={i} className="inline-block mr-0.5 mb-0.5 relative group">
+              <div key={i} className={clsx('inline-flex items-baseline mb-1 relative group', t.spaceAfter && 'mr-1.5')}>
+                {t.pre && <span className="text-[16px] text-[var(--color-gray-600)]">{t.pre}</span>}
                 {isBlanked ? (
                   <>
                     <input
@@ -251,8 +255,11 @@ export function FillMode() {
                       onKeyDown={e => handleKey(e, i)}
                       placeholder={getHint(i)}
                       disabled={disabled}
+                      {...PRECISE_TYPING}
+                      enterKeyHint="next"
                       className={clsx(
-                        'w-[45px] px-1 py-0.5 rounded border text-[11px] text-center outline-none transition-all',
+                        // 16px: smaller text makes the iPhone zoom in when a box is tapped
+                        'w-[4.5em] px-1 py-0.5 rounded border text-[16px] text-center outline-none transition-all',
                         borderColor,
                         disabled && 'cursor-not-allowed opacity-70',
                         status === 'wrong-first' && checked && 'animate-shake'
@@ -276,8 +283,9 @@ export function FillMode() {
                     )}
                   </>
                 ) : (
-                  <span className="px-1 py-0.5 text-[11px] text-[var(--color-gray-600)]">{t.word}</span>
+                  <span className="py-0.5 text-[16px] text-[var(--color-gray-600)]">{t.word}</span>
                 )}
+                {t.post && <span className="text-[16px] text-[var(--color-gray-600)]">{t.post}</span>}
               </div>
             )
           })}
