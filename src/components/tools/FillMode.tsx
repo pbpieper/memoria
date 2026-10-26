@@ -12,15 +12,13 @@ type AttemptStatus = 'unanswered' | 'wrong-first' | 'wrong-second' | 'revealed' 
 const HINT_TYPES = [
   { id: 'wordcount', label: 'Word Length', desc: 'Shows character count per blank', icon: '#️⃣' },
   { id: 'firstletter', label: 'First Letter', desc: 'Shows first letter of each blank', icon: '🔤' },
-  { id: 'scene', label: 'Scene Description', desc: 'Shows chunk visual/anchor as hint', icon: '🎬' },
-  { id: 'palace', label: 'Palace Image', desc: 'Shows memory palace image for the section', icon: '🏛️' },
   { id: 'none', label: 'No Hints', desc: 'Pure recall — nothing to help you', icon: '💀' },
 ]
 
 const DIFFICULTY_PRESETS = [
   { id: 'guided', label: 'Guided', pct: 20, hint: 'firstletter', desc: '20% blanks + first letters' },
   { id: 'moderate', label: 'Moderate', pct: 50, hint: 'wordcount', desc: '50% blanks + word length' },
-  { id: 'hard', label: 'Hard', pct: 80, hint: 'scene', desc: '80% blanks + scene hint only' },
+  { id: 'hard', label: 'Hard', pct: 80, hint: 'none', desc: '80% blanks, no hints' },
   { id: 'brutal', label: 'Brutal', pct: 100, hint: 'none', desc: '100% blanks, no hints' },
   { id: 'custom', label: 'Custom', pct: null, hint: null, desc: 'Your settings' },
 ]

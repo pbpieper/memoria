@@ -7,6 +7,7 @@ import { InlineTags } from '@/components/molecules/InlineTags'
 import { SEED_SKITS } from '@/data/skits'
 import { buildShareUrl } from '@/lib/sharing'
 import { loadGuideProgress } from '@/components/tools/StudyGuide'
+import { loadLastPracticed } from '@/services/local/practiceLog'
 import type { Skit } from '@/types/skit'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
@@ -15,11 +16,12 @@ import toast from 'react-hot-toast'
    Constants
    ═══════════════════════════════════════════════════════════════════════════ */
 
-type SortMode = 'recent' | 'az' | 'progress' | 'tag'
+type SortMode = 'practiced' | 'recent' | 'az' | 'progress' | 'tag'
 
 const SEED_IDS = new Set(SEED_SKITS.map(s => s.id))
 const SORT_OPTIONS: { mode: SortMode; label: string }[] = [
-  { mode: 'recent', label: 'Recent' },
+  { mode: 'practiced', label: 'Last practiced' },
+  { mode: 'recent', label: 'Added' },
   { mode: 'az', label: 'A–Z' },
   { mode: 'progress', label: 'Progress' },
   { mode: 'tag', label: 'Tag' },
@@ -156,7 +158,7 @@ function SkitCard({
             </h3>
           )}
           <p className="text-xs text-[var(--color-text-secondary)] mt-0.5 truncate">{skit.subtitle}</p>
-          <div className="mt-1.5">
+          <div className="mt-1.5" onClick={e => e.stopPropagation()}>
             <InlineTags
               tags={skit.tags || []}
               onChange={onSaveTags}
@@ -222,6 +224,8 @@ export function LibraryView({ onOpenSkit, onImport }: LibraryViewProps) {
   const { isStarred } = useStar()
   const { skitService } = useServices()
   const [sortMode, setSortMode] = useState<SortMode>('recent')
+  // Every sort can be flipped (A–Z ↔ Z–A, newest ↔ oldest) without being a separate sort
+  const [reversed, setReversed] = useState(false)
   const [activeTagFilters, setActiveTagFilters] = useState<Set<string>>(new Set())
   const [editingSkitId, setEditingSkitId] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState('')
@@ -249,19 +253,26 @@ export function LibraryView({ onOpenSkit, onImport }: LibraryViewProps) {
     if (activeTagFilters.size > 0) {
       arr = arr.filter(s => s.tags && s.tags.some(t => activeTagFilters.has(t)))
     }
+    const last = loadLastPracticed()
     switch (sortMode) {
+      case 'practiced':
+        // Most recently practised first; never practised at the end
+        arr.sort((a, b) => (last[b.id] ?? '').localeCompare(last[a.id] ?? ''))
+        break
       case 'recent':
-        return arr.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        arr.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        break
       case 'az':
-        return arr.sort((a, b) => a.title.localeCompare(b.title))
+        arr.sort((a, b) => a.title.localeCompare(b.title))
+        break
       case 'progress':
-        return arr.sort((a, b) => getGuideCompletionPct(b.id) - getGuideCompletionPct(a.id))
+        arr.sort((a, b) => getGuideCompletionPct(b.id) - getGuideCompletionPct(a.id))
+        break
       case 'tag':
         return arr // handled via tagGroups below
-      default:
-        return arr
     }
-  }, [skitLibrary, sortMode, activeTagFilters])
+    return reversed ? arr.reverse() : arr
+  }, [skitLibrary, sortMode, activeTagFilters, reversed])
 
   // Tag grouping
   const tagGroups = useMemo(() => {
@@ -409,6 +420,19 @@ export function LibraryView({ onOpenSkit, onImport }: LibraryViewProps) {
             {sb.label}
           </button>
         ))}
+        <button
+          onClick={() => setReversed(r => !r)}
+          title={reversed ? 'Reversed order' : 'Normal order'}
+          aria-label="Reverse the order"
+          className={clsx(
+            'px-2.5 py-1 rounded-full text-[11px] font-semibold cursor-pointer transition-all border',
+            reversed
+              ? 'bg-[var(--color-green-faded)] text-[var(--color-green-dark)] border-[var(--color-green-light)]'
+              : 'bg-[var(--color-surface)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:border-[var(--color-green-light)]',
+          )}
+        >
+          {reversed ? '↑' : '↓'}
+        </button>
       </div>
 
       {/* Tag filter pills */}
@@ -448,7 +472,7 @@ export function LibraryView({ onOpenSkit, onImport }: LibraryViewProps) {
         {sortMode === 'tag' && tagGroups ? (
           <div className="flex flex-col gap-5">
             {Object.entries(tagGroups.groups)
-              .sort(([a], [b]) => a.localeCompare(b))
+              .sort(([a], [b]) => (reversed ? b.localeCompare(a) : a.localeCompare(b)))
               .map(([tag, skits]) => (
                 <div key={tag}>
                   <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--color-pink-dark,#880e4f)] mb-2 px-2 py-1 rounded bg-[var(--color-pink-faded,#fce4ec)] inline-block">

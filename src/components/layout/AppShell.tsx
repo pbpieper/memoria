@@ -7,6 +7,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { useSessionTracker } from '@/hooks/useSessionTracker'
 import { useServices } from '@/services/ServiceProvider'
 import { ACTIVE_TOOLS } from '@/data/methods'
+import { recordPracticed } from '@/services/local/practiceLog'
 import { SEED_SKITS } from '@/data/skits'
 import { decodeSkitFromUrl } from '@/lib/sharing'
 import { TabBar } from '@/components/molecules/TabBar'
@@ -97,6 +98,11 @@ export function AppShell() {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useKeyboardShortcuts({ setActiveTool, skitLibrary, currentSkitId, setCurrentSkitId })
+
+  // Feeds the Library's "Last practiced" sort (this device only for now)
+  useEffect(() => {
+    if (view === 'practice' && currentSkitId) recordPracticed(currentSkitId)
+  }, [view, currentSkitId, activeTool])
   useSessionTracker()
 
   const handleOpenSkit = useCallback((_skit: Skit) => {
