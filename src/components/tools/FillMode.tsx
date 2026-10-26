@@ -40,26 +40,33 @@ export function FillMode() {
   const [revealed, setRevealed] = useState<Set<number>>(new Set())
   const [attemptCounts, setAttemptCounts] = useState<Record<number, number>>({})
   const inputRefs = useRef<Record<number, HTMLInputElement | null>>({})
+  // "Redo the lines I missed": only those lines, with the missed words always blanked
+  const [redo, setRedo] = useState<{ lines: Set<number>; words: Set<string> } | null>(null)
 
   const lines = useMemo(() => getLinesForGranularity(granularity, section, flatLines, macroSections), [granularity, section, flatLines, macroSections])
 
   const tokens = useMemo(() => {
     // Punctuation stays outside the blanks: "addictions," blanks only addictions, "system…but" is two words
-    const result: Array<WordToken & { lineIdx: number; wordIdx: number; speaker: string; chunkId: number }> = []
+    // srcLine is the line's place in the full selection, so a redo round can point back to it
+    const result: Array<WordToken & { lineIdx: number; srcLine: number; wordIdx: number; speaker: string; chunkId: number }> = []
+    let shown = 0
     lines.forEach((line, li) => {
+      if (redo && !redo.lines.has(li)) return
       splitWords(line.text).forEach((w, wi) => {
-        result.push({ ...w, lineIdx: li, wordIdx: wi, speaker: line.speaker, chunkId: line.chunkId })
+        result.push({ ...w, lineIdx: shown, srcLine: li, wordIdx: wi, speaker: line.speaker, chunkId: line.chunkId })
       })
+      shown++
     })
     return result
-  }, [lines])
+  }, [lines, redo])
 
   const blankSet = useMemo(() => {
     const words = tokens.map((_, i) => i).filter(i => tokens[i].word !== '')
     if (pct === 100) return new Set(words)
-    const eligible = words.filter(i => letterCount(tokens[i].word) > 2)
+    const missed = words.filter(i => redo?.words.has(`${tokens[i].srcLine}:${tokens[i].wordIdx}`))
+    const eligible = words.filter(i => letterCount(tokens[i].word) > 2 && !missed.includes(i))
     const shuffled = [...eligible].sort(() => Math.random() - 0.5)
-    return new Set(shuffled.slice(0, Math.ceil(eligible.length * (pct / 100))))
+    return new Set([...missed, ...shuffled.slice(0, Math.ceil(eligible.length * (pct / 100)))])
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tokens, pct, gen])
 
@@ -89,8 +96,21 @@ export function FillMode() {
 
   const regenerate = () => { setGen(g => g + 1); setAnswers({}); setChecked(false); setRevealed(new Set()); setAttemptCounts({}) }
 
-  const handleGranularityChange = (g: string) => { setGranularity(g); regenerate() }
-  const handleSectionChange = (s: string) => { setSection(s); regenerate() }
+  const handleGranularityChange = (g: string) => { setGranularity(g); setRedo(null); regenerate() }
+  const handleSectionChange = (s: string) => { setSection(s); setRedo(null); regenerate() }
+
+  // A line is missed when any of its blanks was wrong, revealed or left empty at Check All
+  const missedBlanks = checked ? blankKeys.filter(i => revealed.has(i) || !answers[i] || !isCorrect(i)) : []
+  const missedLineCount = new Set(missedBlanks.map(i => tokens[i].srcLine)).size
+
+  const startRedo = () => {
+    setRedo({
+      lines: new Set(missedBlanks.map(i => tokens[i].srcLine)),
+      words: new Set(missedBlanks.map(i => `${tokens[i].srcLine}:${tokens[i].wordIdx}`)),
+    })
+    regenerate()
+  }
+  const endRedo = () => { setRedo(null); regenerate() }
 
   const handleKey = (e: React.KeyboardEvent, idx: number) => {
     if (e.key === 'Enter' || e.key === 'Tab') {
@@ -213,6 +233,23 @@ export function FillMode() {
       {stats && (
         <div className="p-3 bg-[var(--color-green-faded)] rounded-xl border border-[var(--color-green-bright)] text-xs mb-3">
           <strong className="text-[var(--color-green-dark)]">Results:</strong> {stats.correct} correct, {stats.wrong} wrong, {stats.revealed} revealed ({Math.round((stats.correct / stats.total) * 100)}%)
+          {missedLineCount > 0 && (
+            <button onClick={startRedo}
+              className="block mt-2 px-3 py-1.5 rounded-lg border-none bg-[var(--color-pink)] text-white text-xs font-semibold cursor-pointer">
+              Redo the {missedLineCount === 1 ? 'line' : `${missedLineCount} lines`} I missed
+            </button>
+          )}
+        </div>
+      )}
+
+      {redo && (
+        <div className="flex items-center justify-between gap-2 p-2.5 mb-3 rounded-xl border border-[var(--color-pink-mid)] bg-[var(--color-pink-faded)] text-xs">
+          <span className="text-[var(--color-pink-dark)] font-semibold">
+            Redoing {redo.lines.size === 1 ? 'the line' : `the ${redo.lines.size} lines`} you missed
+          </span>
+          <button onClick={endRedo} className="bg-transparent border-none p-0 text-xs text-[var(--color-text-secondary)] underline cursor-pointer">
+            Back to the full text
+          </button>
         </div>
       )}
 
