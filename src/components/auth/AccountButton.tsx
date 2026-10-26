@@ -31,7 +31,8 @@ export function AccountButton() {
   return (
     <div className="relative">
       <button onClick={() => setOpen(o => !o)} className={`${base} text-[var(--color-text-secondary)]`} title={email ?? undefined}>
-        ☁️ Synced
+        {/* The account name is always visible, so signing in with the wrong address is obvious */}
+        ☁️ {email ? email.split('@')[0] : 'Synced'}
       </button>
       {open && (
         <div className="absolute right-0 mt-1 z-50 min-w-[200px] rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-lg text-xs">
